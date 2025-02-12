@@ -5,12 +5,195 @@
     "description": "Chiplet repository",
     "type": "object",
     "properties": {
-        "field1": {
-            "description": "des",
-            "type": "integer"
+        "physical": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number"
+                },
+                "silicon utilization rate": {
+                    "type": "number"
+                },
+                "process node": {
+                    "type": "object",
+                    "properties": {
+                        "size": {
+                            "type": "number"
+                        },
+                        "maturity": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "bumps": {
+                    "type": "object",
+                    "properties": {
+                        "bump pitch": {
+                            "type": "number"
+                        },
+                        "microbump pitch": {
+                            "type": "number"
+                        },
+                        "percent microbumps for IO": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "network router area": {
+                    "type": "number"
+                },
+                "transistor count": {
+                    "type": "integer"
+                },
+                "components": {
+                    "type": "object",
+                    "properties": {
+                        "memory": {
+                            "type": "object",
+                            "properties": {
+                                "capacity": {
+                                    "type": "number"
+                                },
+                                "latency": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "cache": {
+                            "type": "object",
+                            "properties": {
+                                "number": {
+                                    "type": "number"
+                                },
+                                "capacity": {
+                                    "type": "number"
+                                },
+                                "levels": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "FPU": {
+                            "type": "boolean"
+                        },
+                        "GPU": {
+                            "type": "boolean"
+                        },
+                        "modem": {
+                            "type": "boolean"
+                        },
+                        "cores": {
+                            "type": "object",
+                            "properties": {
+                                "number of cores": {
+                                    "type": "integer"
+                                },
+                                "number of routers in core": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "clock frequency": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
         },
-        "field2": {
-
+        "main functionality": {
+            "type": "string"
+        },
+        "communication": {
+            "type": "object",
+            "properties": {
+                "bandwidth": {
+                    "type": "number"
+                },
+                "bandwidth density": {
+                    "type": "number"
+                },
+                "cache protocol": {
+                    "type": "string"
+                },
+                "latency": {
+                    "type": "number"
+                },
+                "PCIe": {
+                    "type": "object",
+                    "properties": {
+                        "link width": {
+                            "type": "number"
+                        },
+                        "number of IO lanes": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "network interfaces": {
+                    "type": "object",
+                    "properties": {
+                        "number": {
+                            "type": "integer"
+                        },
+                        "position": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "NVMe": {
+                    "type": "boolean"
+                },
+                "DDR memory channels": {
+                    "type": "integer"
+                },
+                "SISL": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "IO": {
+            "type": "object",
+            "properties": {
+                "USB": {
+                    "type": "boolean"
+                },
+                "SATA": {
+                    "type": "boolean"
+                },
+                "Ethernet": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "power": {
+            "type": "object",
+            "properties": {
+                "voltage": {
+                    "type": "number"
+                },
+                "power consumption": {
+                    "type": "object",
+                    "properties": {
+                        "active": {
+                            "type": "number"
+                        },
+                        "standby": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        },
+        "cost": {
+            "type": "number"
+        },
+        "temperature": {
+            "type": "object",
+            "properties": {
+                "thermal resistance": {
+                    "type": "number"
+                }
+            }
         }
 
     },
