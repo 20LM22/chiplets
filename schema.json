@@ -1,0 +1,18 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://hostname.com/chiplets.schema.json",
+    "title": "Chiplets",
+    "description": "Chiplet repository",
+    "type": "object",
+    "properties": {
+        "field1": {
+            "description": "des",
+            "type": "integer"
+        },
+        "field2": {
+
+        }
+
+    },
+    "required": []
+}
