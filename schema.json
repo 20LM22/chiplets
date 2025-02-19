@@ -8,29 +8,57 @@
         "physical": {
             "type": "object",
             "properties": {
-                "area": {
-                    "type": "number"
+                "area": { 
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "unit": {
+                            "enum": ["cm^2", "mm^2", "um^2", "nm^2"]
+                        }
+                    }
                 },
-                "silicon utilization rate": {
-                    "type": "number"
+                "x-dimension": {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "unit": {
+                            "enum": ["cm", "mm", "um", "nm"]
+                        }
+                    }
+                },
+                "y-dimension:" {
+                    "type": "object",
+                    "properties": {
+                        "value": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "unit": {
+                            "enum": ["cm", "mm", "um", "nm"]
+                        }
+                    }
                 },
                 "process node": {
                     "type": "object",
                     "properties": {
-                        "size": {
-                            "type": "number"
+                        "value": {
+                            "type": "number",
+                            "minimum": 0
                         },
-                        "maturity": {
-                            "type": "string"
+                        "unit": {
+                            "enum": ["um", "nm"]
                         }
                     }
                 },
                 "bumps": {
                     "type": "object",
                     "properties": {
-                        "bump pitch": {
-                            "type": "number"
-                        },
                         "microbump pitch": {
                             "type": "number"
                         },
@@ -82,14 +110,20 @@
                         "modem": {
                             "type": "boolean"
                         },
-                        "cores": {
-                            "type": "object",
-                            "properties": {
-                                "number of cores": {
-                                    "type": "integer"
-                                },
-                                "number of routers in core": {
-                                    "type": "integer"
+                        "CPU": {
+                            "FLOPS": {
+                                "type": "number",
+                                "minimum": 0
+                            },
+                            "cores": {
+                                "type": "object",
+                                "properties": {
+                                    "number of cores": {
+                                        "type": "integer"
+                                    },
+                                    "number of routers in core": {
+                                        "type": "integer"
+                                    }
                                 }
                             }
                         },
@@ -101,16 +135,18 @@
             }
         },
         "main functionality": {
-            "type": "string"
+            "enum": ["accelerator", "compute", "I/O", "DSP", "memory", "GPU", "FPGA"]
         },
         "communication": {
             "type": "object",
             "properties": {
-                "bandwidth": {
-                    "type": "number"
+                "NoC bandwidth": {
+                    "type": "number",
+                    "minimum": 0
                 },
                 "bandwidth density": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0
                 },
                 "cache protocol": {
                     "type": "string"
@@ -162,6 +198,15 @@
                 },
                 "Ethernet": {
                     "type": "boolean"
+                },
+                "SPI": {
+                    "type": "boolean"
+                },
+                "UART": {
+                    "type": "boolean"
+                },
+                "I2C": {
+                    "type": "boolean"
                 }
             }
         },
@@ -169,7 +214,17 @@
             "type": "object",
             "properties": {
                 "voltage": {
-                    "type": "number"
+                    "type": "object",
+                    "properties": {
+                        "min": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "max": {
+                            "type": "number",
+                            "minimum": 0
+                        }
+                    }
                 },
                 "power consumption": {
                     "type": "object",
