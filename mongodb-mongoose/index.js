@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import Chiplet from './model/Chiplet.js';
+import generateChiplet from 'chipletGenerator.js';
+import ProtocolCompatibility from './model/ProtocolCompatibility.js';
 
 mongoose.connect("mongodb+srv://Lauren:dtuk2o8uCrB4FYFa@chipletrepository.rgz8c.mongodb.net/chiplet_repository")
 
@@ -60,4 +62,29 @@ const chiplets_to_insert = [seven_nm_4_GHz_Arm_Core_Based_CoWoS, manticore]; // 
 const options = { ordered: true };
 await Chiplet.insertMany(chiplets_to_insert, options);
 
-// await chiplet.save();
+// generate and insert synthetic chiplets
+const NUM_SYNTHETIC_CHIPLETS = 20;
+let synthetic_chiplets = [];
+for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
+    synthetic_chiplets.push(generateChiplet());
+}
+await Chiplet.insertMany(synthetic_chiplets, options = { ordered: true });
+
+// insert protocol documents
+const ucie = new Protocol({
+    name: "UCIe",
+    max_bandwidth: "2",
+    reach: "2",
+    num_channels: 2,
+    BER: "2",
+    _id: "UCIe" // user sets this explicitly
+});
+
+// insert compatibility documents
+for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
+    synthetic_chiplets.push(generateChiplet());
+}
+
+syn_protocol_compat = generate_synthetic_protocol_compatibility_docs();
+await ProtocolCompatibility.insertMany(syn_protocol_compat, options = { ordered: true });
+
