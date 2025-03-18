@@ -1,6 +1,9 @@
 import { faker } from '@faker-js/faker';
+import { Chiplet } from './model/Chiplet.js';
+import { generate_Bow_Signal_Subbump_Region, generate_Bow_Power_Subbump_Region } from './subbumpRegionGenerator.js';
 
 export default function generateChiplet() {
+    const chiplet_id = mongoose.ObjectId.toString();
     const width = faker.number.float({ min: -5, max: 2000, fractionDigits: 2 }) + " " + faker.helpers.arrayElement(['mm', 'um', 'cm', 'nm']);
     const height = faker.number.float({ min: -5, max: 2000, fractionDigits: 2 }) + " " + faker.helpers.arrayElement(['mm', 'um', 'cm', 'nm']);
     const area = width*height + " " + faker.helpers.arrayElement(['mm^2', 'um^2', 'cm^2', 'nm^2']);
@@ -123,18 +126,57 @@ export default function generateChiplet() {
     // interfaces
     const num_interfaces = faker.number.int({ min: 1, max: 2 });
     const interfaces = [];
+
+    // need to set up an array that you can add subbumps to as interfaces are generated
+    const subbump_regions_documents_all_interfaces = [];
+
     for (let i = 0; i < num_interfaces; i++) {
+        // each interface needs these properties
+        const interface_id = chiplet_id + "_" + PHY + "_" + i; // id = a2c9_BoW_0
+
+        // PHY layer
+        const PHY = new Array(2);
+        PHY[0] = "BoW"; // faker.helpers.arrayElement["16x PCIe", "UCIe", "AIB", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "PCIe", "DisplayPort"],
+        
+        // Protocols layer
+        const num_protocols_in_interface = faker.number.int({ min: 1, max: 2 });
+        const protocol_layer = Array(num_protocols_in_interface);
+        for (let j = 0; j < num_protocols_in_interface; j++) {
+            const protocol = Array(2);
+            protocol[0] =  ["CXL.io", "CXL.cache", "CXL.mem", "PCIe", "AXI", "SATA"];
+            protocol_layer.push(protocol);
+        }
+
+        // Generate a bump region for this interface --> will need some parameters into here
+        /*
+        const bump_pitch = 50; // in the github doc, they gave an example of 40um for an interposer
+        const diameter = 20; // these numbers can be made random, but for now let's fix them
+        const bump_region_generation_result = generate_Bump_Region(interface_id, width, height, bump_pitch, diameter);
+        const bump_region = bump_region_generation_result[0];
+        // also take the subbump documents that were generated and put them into the array
+        // that keeps track of all the subbump docs that have been generated for this chiplet
+        const subbump_regions_documents = bump_region_generation_result[1];
+        subbump_regions_documents_all_interfaces.push(...subbump_regions_documents);
+        */
+
+        /* const voltage_domain = 0; // need to generate some voltage and clock domains
+        const clock_domain = 0; */
+        const bump_region = "BoW Half-slice"; // choose a bump region from the existing bump regions collection
+        // faker.helpers.arrayElement["16x PCIe", "UCIe", "AIB", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "PCIe", "DisplayPort"],
+
         f = {
-            // still need to flesh out whether these are the best options
-            // does this setup even make sense?
-            physical_layer: faker.helpers.arrayElement["16x PCIe", "LIPINCON", "UCIe-A", "UCIe-S", "AIB", "MDIO", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "USB4", "PCIe", "DisplayPort"],
-            protocol_layer: faker.helpers.arrayElement["16x PCIe", "LIPINCON", "CXL.io", "CXL.cache", "CXL.mem", "PCIe", "AXI", "SATA"],
-            bandwidth: faker.helpers.arrayElement([1, 2, 4, 8, 16, 32, 64, 128, 256]) + " " + faker.helpers.arrayElement(['GB/s', 'MB/s', 'KB/s', 'Gb/s', 'Mb/s', 'Kb/s']),
+            physical_layer: PHY,
+            protocol_layer: protocol_layer,
+            bump_region: bump_region,
+            // voltage_domain: voltage_domain,
+            // clock_domain: clock_domain,
+            id_: interface_id
         };
-        L3_caches.push(f);
+        interfaces.push(f);
     }
 
     const synthetic_chiplet = new Chiplet({ // this is 1 chiplet
+        _id: chiplet_id,
         area: area,
         width: width,
         height: height,
@@ -156,10 +198,77 @@ export default function generateChiplet() {
         interfaces: interfaces,     
     });
     
-    return synthetic_chiplet;
+    return [synthetic_chiplet, subbump_regions_documents_all_interfaces];
 };
 
 // before creating the chiplet data, need to create the protocol data so that i have the ids to link to
 // then afer creating the protocol data, can fill up the compatibility table as well
 // the exception table is the last thing that gets created because it depends on the chiplet ids
 // need the bump maps before you create the chiplets
+
+function generate_Bump_Region(interface_id, chiplet_x_dim, chiplet_y_dim, bump_pitch, diameter) {
+    // need to generate the subbump regions for this bump region
+
+    // for now let's assume you only generate subbumps for BoW
+    const subbump_region_array = Array(2); // one subbump region for the signals, one for power
+
+    // randomly generate hexagonal but for now keep it true
+    const hexagonal = true;
+
+    // generate the offsets for the signal and power subbumps
+    // start with the number of rows being 2 for signal and 1 for power
+    const NUM_SIGNAL_ROWS = 2;
+    const NUM_POWER_ROWS = 1;
+
+    // assume for now that the offset is from the bottom of the chip, we're just trying to put interfaces 
+    // on the bottom of a chip
+    const vertical_row_offset = hexagonal ? bump_pitch * Math.cos(Math.PI * (1/6)) : bump_pitch;
+    const v_offset_signal = NUM_SIGNAL_ROWS * vertical_row_offset;
+    const v_offset_power = signal_subbump_offset + NUM_POWER_ROWS * vertical_row_offset;
+
+    // laterally there is some room to place them
+    // when this is randomly generated, it should make sure to choose a value greater than 0
+    // and small enough that the interface isn't going to go off the chip, so that requires
+    // knowing whether the interface is a half slice or full slice
+    const lateral_offset = 2; // randomly generate based on the chiplet_x_dim
+
+    h_offset_signal = lateral_offset;
+    h_offset_power = hexagonal ? lateral_offset + 0.5*bump_pitch : lateral_offset;
+
+    // need to generate the actual subbump region documents that house the specific bump layouts
+    const half_slice = false; // can change this to make it random
+    const subbump_signal_region_id = interface_id + "_bump_region" + "_signal";
+    const subbump_power_region_id = interface_id + "_bump_region" + "_power";
+
+    // these functions generate and return SubbumpRegion documents that need to be ingested into the SubbumpRegion collection
+    const subbump_region_signal_document = generate_Bow_Signal_Subbump_Region(subbump_signal_region_id, bump_pitch, diameter, hexagonal, half_slice);
+    const subbump_region_power_document = generate_Bow_Power_Subbump_Region(subbump_power_region_id, bump_pitch, diameter, hexagonal, half_slice);
+
+    const subbump_regions_documents = [subbump_region_signal_document, subbump_region_power_document];
+
+    // generate the subbump region objects and add them to the array of subbump regions
+    const subbump_region_power = {
+        subbump_region_id: subbump_power_region_id,
+        offset: [h_offset_power, v_offset_power],
+        rotation: 0,
+        flipped: false
+    };
+
+    const subbump_region_signal = {
+        subbump_region_id: subbump_signal_region_id,
+        offset: [h_offset_signal, v_offset_signal],
+        rotation: 0,
+        flipped: false
+    };
+
+    subbump_region_array[0] = subbump_region_power;
+    subbump_region_array[1] = subbump_region_signal;
+
+    // then put the array together with the id that describes this particular array into the bump region
+    const bump_region = {
+        bump_region_id: interface_id + "bump_region",
+        subbump_regions: subbump_region_array
+    };
+
+    return [bump_region, subbump_regions_documents];
+}

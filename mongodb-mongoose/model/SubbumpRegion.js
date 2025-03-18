@@ -3,10 +3,10 @@ const { Schema, model } = mongoose;
 
 const subbumpRegionSchema = new Schema({
     bumps: [bumpSchema], // a subbump region is a list of bumps that make up the region
-    subbump_region_id: String // needs to be set by user when constructing the subbump map
+    _id: String // needs to be set by user when constructing the subbump map
 });
 
-const bumpSchema = new Bump({
+const bumpSchema = new Schema({
     x_pos: Number,
     y_pos: Number,
     diameter: Number,

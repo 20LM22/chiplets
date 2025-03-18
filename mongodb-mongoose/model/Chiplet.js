@@ -36,14 +36,11 @@ const cache_schema = new Schema({
     _id: false
 });
 
-const interface_schema = new Schema({
-    physical_layer: [String, String], // enum: ["16x PCIe", "LIPINCON", "UCIe-A", "UCIe-S", "AIB", "MDIO", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "USB4", "PCIe", "DisplayPort"]
-    protocol_layer: { // enum: ["16x PCIe", "LIPINCON", "CXL.io", "CXL.cache", "CXL.mem", "PCIe", "AXI", "SATA", "OpenCAPI", "CCIX"]
-        type: [[String, String]] // the first field is for the protocol layer name and the second field is for the protocol layer id
-    },
-    bump_region: bump_region_schema,
-    voltage_domain: voltage_domain_schema,
-    clock_domain: clock_domain_schema
+const subbump_region_schema = new Schema({
+    subbump_region_id: String, // this id will link it to a document in the subbump_region collection
+    offset: [Number, Number],
+    rotation: Number,
+    flipped: Boolean
 });
 
 const bump_region_schema = new Schema({
@@ -51,11 +48,24 @@ const bump_region_schema = new Schema({
     subbump_regions: [subbump_region_schema]
 });
 
-const subbump_region_schema = new Schema({
-    subbump_region_id: String, // this id will link it to a document in the subbump_region collection
-    offset: [Number, Number],
-    rotation: Number,
-    flipped: Boolean
+// generate the bump map first
+// hbm subbump maps are not chiplet specific
+// make the subbump map ids clear to begin with, not random digitsy
+// don't create subbump maps when the chiplet is created, just create some subbump map documents beforehand,
+// give them descriptive names and then just randomly choose them from an enum
+
+// can use transactions to prevent unique subbump maps from going into the database if their associated
+// chiplet fails validation
+
+const interface_schema = new Schema({
+    physical_layer: [String, String], // enum: ["16x PCIe", "LIPINCON", "UCIe-A", "UCIe-S", "AIB", "MDIO", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "USB4", "PCIe", "DisplayPort"]
+    protocol_layer: { // enum: ["16x PCIe", "LIPINCON", "CXL.io", "CXL.cache", "CXL.mem", "PCIe", "AXI", "SATA", "OpenCAPI", "CCIX"]
+        type: [[String, String]] // the first field is for the protocol layer name and the second field is for the protocol layer id
+    },
+    bump_region: bump_region_schema,
+    voltage_domain: voltage_domain_schema,
+    clock_domain: clock_domain_schema,
+    _id: String
 });
 
 const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU clusters
@@ -146,15 +156,16 @@ const ddr_schema = new Schema({
 });
 
 const chiplet_schema = new Schema({
+    _id: String,
     area: String,
     width: String,
     height: String,
     process_node: String,
     functionality: [String],
-    HBMs: [hbm_schema],
+    HBMs: [hbm_schema], // then would have a controller as an interface
     SRAMs: [memory_schema],
     DRAMs: [memory_schema],
-    DDRs: [ddr_schema],
+    DDRs: [ddr_schema], // then would have a controller as an interface
     GPUs: [gpu_schema],
     CPUs: [cpu_schema],
     L2_caches: [cache_schema],
