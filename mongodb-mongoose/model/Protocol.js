@@ -13,6 +13,7 @@ const protocolSchema = new Schema({
 const Protocol = model('Protocol', protocolSchema);
 export default Protocol;
 
+/*
 protocolSchema.pre('validate', function(next){
     if (this.max_bandwidth != undefined) {
         const bw = Number.parseFloat(this.max_bandwidth); // units will be GB/s
@@ -39,3 +40,4 @@ protocolSchema.pre('validate', function(next){
         }
     }
 });
+*/

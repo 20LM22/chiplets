@@ -24,38 +24,36 @@ const clock_domain_schema = new Schema({
 const cache_schema = new Schema({
     quantity: {
         type: Number,
-        min: 1
+        min: 0
     },
     capacity: String,
     associativity: {
         type: Number,
-        min: 1
+        min: 0
     },
     replacement_policy: String,
     clock_frequency: String,
     _id: false
 });
 
-const subbump_region_schema = new Schema({
-    subbump_region_id: String, // this id will link it to a document in the subbump_region collection
-    offset: [Number, Number],
-    rotation: Number,
-    flipped: Boolean
-});
-
-const bump_region_schema = new Schema({
-    bump_region_id: String,
-    subbump_regions: [subbump_region_schema]
-});
-
 // generate the bump map first
 // hbm subbump maps are not chiplet specific
-// make the subbump map ids clear to begin with, not random digitsy
+// make the subbump map ids clear to begin with, not random digits
+// BoW slice 2
+
 // don't create subbump maps when the chiplet is created, just create some subbump map documents beforehand,
 // give them descriptive names and then just randomly choose them from an enum
 
 // can use transactions to prevent unique subbump maps from going into the database if their associated
 // chiplet fails validation
+
+const bump_region_schema = new Schema({
+    subbump_map_id: String, // the subbump maps should already exist and when the user creates a chiplet, they use an id from a dropdown/enum to select from the existing ones
+    offset: [Number, Number], // need to be strings
+    rotation: Number,
+    flipped: Boolean,
+    _id: false
+});
 
 const interface_schema = new Schema({
     physical_layer: [String, String], // enum: ["16x PCIe", "LIPINCON", "UCIe-A", "UCIe-S", "AIB", "MDIO", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "USB4", "PCIe", "DisplayPort"]
@@ -63,21 +61,19 @@ const interface_schema = new Schema({
         type: [[String, String]] // the first field is for the protocol layer name and the second field is for the protocol layer id
     },
     bump_region: bump_region_schema,
-    voltage_domain: voltage_domain_schema,
-    clock_domain: clock_domain_schema,
-    _id: String
+    _id: false
 });
 
 const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU clusters
     quantity: {
         type: Number,
-        min: 1
+        min: 0 // should these be 0?
     },
     manufacturer: String,
     processor_name: String,
     num_cores: {
         type: Number,
-        min: 1
+        min: 0
     },
     clock_frequency: String,
     process_node: String,
@@ -92,7 +88,7 @@ const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
 const gpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU clusters
     quantity: {
         type: Number,
-        min: 1
+        min: 0
     },
     manufacturer: String,
     processor_name: String,
@@ -172,12 +168,12 @@ const chiplet_schema = new Schema({
     L3_caches: [cache_schema],
     voltage_domains: [voltage_domain_schema],
     interfaces: [interface_schema],
-    base_clock_frequency: String,
+    base_clock_frequency: String
 });
 
 const Chiplet = model('Chiplet', chiplet_schema);
 export default Chiplet;
-
+/*
 cache_schema.pre('validate', function(next){
     // cache capacities will be stored in KB
     if (this.capacity != undefined) {
@@ -580,7 +576,7 @@ ddr_schema.pre('validate', function(next) {
     }
 });
 
-chiplet_schema.pre('save', function(next) {
+chiplet_schema.pre('validate', function(next) {
     if (this.area != undefined) {
         const area = Number.parseFloat(this.area); // value will be in mm^2
         if (area <= 0) {
@@ -650,8 +646,9 @@ chiplet_schema.pre('save', function(next) {
         }
     }
 });
+*/
 
-interface_schema.pre('save', function(next) {
+/* interface_schema.pre('save', function(next) {
     for (let i = 0; i < this.protocol_layer.length; i++) {
         protocol_doc = Protocol.findOne({name: protocol_layer[i]})
         if (protocol_doc == null) {
@@ -659,8 +656,14 @@ interface_schema.pre('save', function(next) {
         } else { // you found it
             this.protocol_layer[i][1] = protocol_doc._id; // link them via id
         }
-    } 
-});
+    }
+    PHY_doc = PHY.findOne({name: this.PHY_layer})
+    if (PHY_doc == null) {
+        this.PHY_layer[i][1] = null;
+    } else { // you found it
+        this.PHY_layer[i][1] = PHY_doc._id; // link them via id
+    }
+}); */
 
 // latency: Number, specified for each interface, depends on rx, tx, and connection between them
 // interface schema: physical, protocol, bandwidth, latency = null,-1,0, undefined

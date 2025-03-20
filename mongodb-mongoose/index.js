@@ -1,8 +1,11 @@
 import mongoose from 'mongoose';
 import Chiplet from './model/Chiplet.js';
-import Subbump_Region from './model/SubbumpRegion.js';
-// import generateChiplet from './chipletGenerator.js';
-// import ProtocolCompatibility from './model/ProtocolCompatibility.js';
+import { generate_Bow_Subbump_Map } from './subbumpMapGenerator.js';
+import SubbumpMap from './model/SubbumpMap.js';
+import { generate_PHY } from './protocolAndPHYGenerator.js';
+import PHY from './model/PHY.js';
+import Protocol from './model/Protocol.js';
+import { generate_chiplet } from './chipletGenerator.js';
 
 mongoose.connect("mongodb+srv://Lauren:dtuk2o8uCrB4FYFa@chipletrepository.rgz8c.mongodb.net/chiplet_repository")
 
@@ -68,37 +71,49 @@ await Chiplet.insertMany(chiplets_to_insert, options);
 
 // generate and insert synthetic chiplets
 const NUM_SYNTHETIC_CHIPLETS = 20;
-// let synthetic_chiplets = [];
+let synthetic_chiplets = [];
 for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
     // generate chiplet returns a chiplet doc to insert and a bunch of subbump region docs to insert
-    const generated_chiplet_data = generateChiplet();
-    const synthetic_chiplet = generated_chiplet_data[0];
-    const subbump_regions_documents_all_interfaces = generated_chiplet_data[1];
-    await Chiplet.insertOne(synthetic_chiplet);
-    await Subbump_Region.insertMany(subbump_regions_documents_all_interfaces, options={ ordered : true });
-    // synthetic_chiplets.push(generateChiplet());
+    const synthetic_chiplet = generate_chiplet(); // maybe could break it down into generating basic types/functionalities of chiplets?
+    synthetic_chiplets.push(synthetic_chiplet);
 }
+const options = { ordered: true };
+await Chiplet.insertMany(synthetic_chiplets, options);
+console.log("done")
 
-// They should probably be inserted one at a time with their subbump maps so that subbump maps aren't included
-// which correspond to bad chiplets
-// await Chiplet.insertMany(synthetic_chiplets, options = { ordered: true });
 
-/* 
-// insert protocol documents
-const ucie = new Protocol({
-    name: "UCIe",
-    max_bandwidth: "2",
-    reach: "2",
-    num_channels: 2,
-    BER: "2",
-    _id: "UCIe" // user sets this explicitly
+// Generate and insert subbump maps for BoW-32
+let subbump_maps = []; // 50bp, 20dia
+let map = generate_Bow_Subbump_Map("BoW_32-50bp-20dia-hex-full", 50, 20, true, false);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-40bp-20dia-rect-full", 40, 20, false, false);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-full", 50, 10, true, false);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-40bp-10dia-rect-full", 40, 10, false, false);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-50bp-20dia-hex-half", 50, 20, true, true);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-40bp-20dia-rect-half", 40, 20, false, true);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-half", 50, 10, true, true);
+subbump_maps.push(map);
+map = generate_Bow_Subbump_Map("BoW_32-40bp-10dia-rect-half", 40, 10, false, true);
+subbump_maps.push(map);
+// await SubbumpMap.insertMany(subbump_maps, options);
+
+const phy_docs = generate_PHY();
+// await PHY.insertMany(phy_docs, options);
+
+const protocol = new Protocol({
+    name: 'PCIe',
+    max_bandwidth: '4 MB/s', // not true
+    num_lanes: '16',
+    _id: 'PCIe_16x' // user sets this explicitly
 });
 
-// insert compatibility documents
-for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
-    synthetic_chiplets.push(generateChiplet());
-}
+// await Protocol.insertOne(protocol);
 
-syn_protocol_compat = generate_synthetic_protocol_compatibility_docs();
-await ProtocolCompatibility.insertMany(syn_protocol_compat, options = { ordered: true });
-*/
+// insert compatibility documents
+// syn_protocol_compat = generate_synthetic_protocol_compatibility_docs();
+// await ProtocolCompatibility.insertMany(syn_protocol_compat, options = { ordered: true });
