@@ -3,6 +3,8 @@ import Chiplet from './model/Chiplet.js';
 import mongoose from 'mongoose';
 
 export function generate_chiplet() {
+    // maybe should use objectids? faker.database.mongodbObjectId() // 'e175cac316a79afdd0ad3afb'
+    // have names?
     const chiplet_id = faker.string.uuid(); // mongoose.ObjectId.toString(); // taking out some of the negatives
     const width = faker.number.float({ min: 0, max: 2000, fractionDigits: 2 }) + " " + faker.helpers.arrayElement(['mm', 'um', 'cm', 'nm']);
     const height = faker.number.float({ min: 0, max: 2000, fractionDigits: 2 }) + " " + faker.helpers.arrayElement(['mm', 'um', 'cm', 'nm']);
@@ -173,9 +175,47 @@ export function generate_chiplet() {
         l3_cache: [cache_schema],
     }]; */
 
-    
-    // interfaces
+    // generate synthetic bump maps
     const num_interfaces = faker.number.int({ min: 1, max: 2 });
+    const bump_regions = [];
+
+    // first generate bump map for each interface
+    for (let i = 0; i < num_interfaces; i++) { // user has to select the matching subbump map?
+        // b is one bump region
+        const subbump_map_id = faker.helpers.arrayElement["BoW_32-50bp-20dia-hex-full", "BoW_32-40bp-20dia-rect-full",
+"BoW_32-50bp-10dia-hex-full", "BoW_32-40bp-10dia-rect-full", "BoW_32-50bp-20dia-hex-half", "BoW_32-40bp-20dia-rect-half",
+"BoW_32-50bp-10dia-hex-half", "BoW_32-40bp-10dia-rect-half"];
+        const x_offset = "1 cm"; // should change these to allow for greater flexibility
+        const y_offset = "1 cm";
+        const rotation = "0"; // degrees, radians? start this off as 0
+        const flipped = faker.datatype.boolean(0); // true with 30% probability, start this off as 0
+        const b = {
+            subbump_map_id: "", // must match what is in the subbump collection
+            offset: [x_offset, y_offset],
+            rotation: rotation,
+            flipped: flipped,
+            _id: faker.string.uuid() // id of this bump map --> can be random, prepended with the chiplet name
+        };
+        bump_regions.push(b);
+    }
+
+    // then generate a virtual one <-- a virtual bump region, not a virtual interface?
+    // now add in a virtual bump map that corresponds to having some pins that don't connect to interfaces
+    const virtual_subbump_map_id = faker.helpers.arrayElement["sparse bump layout"]; // how to create this, because it's specific to the chiplet
+    const x_offset_v = "0 um"; // the virtual one should live at 0, 0
+    const y_offset_v = "0 um";
+    const rotation_v = "0"; // degrees, radians
+    const flipped_v = false; // true with 30% probability
+    const virtual_bump_map = {
+            subbump_map_id: virtual_subbump_map_id, // must match what is in the subbump collection
+            offset: [x_offset_v, y_offset_v],
+            rotation: rotation_v,
+            flipped: flipped_v,
+            _id: faker.string.uuid() // id of this bump map --> can be random, prepended with the chiplet name
+    };
+    bump_regions.push(virtual_bump_map);
+
+    // interfaces
     const interfaces = [];
     for (let i = 0; i < num_interfaces; i++) {
         // PHY layer
@@ -191,16 +231,16 @@ export function generate_chiplet() {
             protocol[1] = " ";
             protocol_layer.push(protocol);
         }
-        const bump_region = {
-            subbump_map_id: faker.helpers.arrayElement["BoW_32-50bp-20dia-hex-full", "BoW_32-40bp-20dia-rect-full",
-"BoW_32-50bp-10dia-hex-full", "BoW_32-40bp-10dia-rect-full", "BoW_32-50bp-20dia-hex-half", "BoW_32-40bp-20dia-rect-half",
-"BoW_32-50bp-10dia-hex-half", "BoW_32-40bp-10dia-rect-half"],
-            offset: [2, 2], // fill with realistic numbers!!!!!! THIS NEEDS TO BE FIXED!!!!
-            rotation: 0,
-            flipped: false
-        };
 
-        /*
+        const f = {
+            physical_layer: PHY,
+            protocol_layer: protocol_layer,
+            bump_region: bump_region[i], // generate them in order, then match them up
+        };
+        interfaces.push(f);
+    }
+
+    /*
         const bump_pitch = 50; // in the github doc, they gave an example of 40um for an interposer
         const diameter = 20; // these numbers can be made random, but for now let's fix them
         const bump_region_generation_result = generate_Bump_Region(interface_id, width, height, bump_pitch, diameter);
@@ -209,17 +249,7 @@ export function generate_chiplet() {
         // that keeps track of all the subbump docs that have been generated for this chiplet
         const subbump_regions_documents = bump_region_generation_result[1];
         subbump_regions_documents_all_interfaces.push(...subbump_regions_documents);
-        */
-
-//        const bump_region = "BoW Half-slice"; // choose a bump region from the existing bump regions collection
-        // faker.helpers.arrayElement["16x PCIe", "UCIe", "AIB", "LIPINCON", "BoW", "USB", "ethernet", "SATA", "PCIe", "DisplayPort"],
-        const f = {
-            physical_layer: PHY,
-            // protocol_layer: protocol_layer,
-            bump_region: bump_region,
-        };
-        interfaces.push(f);
-    }
+    */
 
     const synthetic_chiplet = new Chiplet({ // this is 1 chiplet, power efficiency
         _id: chiplet_id,
@@ -236,7 +266,8 @@ export function generate_chiplet() {
         HBMs: HBMs,
         SRAM: SRAM,
         DRAM: DRAM,
-        interfaces: interfaces   
+        interfaces: interfaces,
+        bump_regions: bump_regions
     });
 
     console.log(interfaces);

@@ -52,7 +52,7 @@ const bump_region_schema = new Schema({
     offset: [Number, Number], // need to be strings
     rotation: Number,
     flipped: Boolean,
-    _id: false
+    _id: String
 });
 
 const interface_schema = new Schema({
@@ -60,7 +60,7 @@ const interface_schema = new Schema({
     protocol_layer: { // enum: ["16x PCIe", "LIPINCON", "CXL.io", "CXL.cache", "CXL.mem", "PCIe", "AXI", "SATA", "OpenCAPI", "CCIX"]
         type: [[String, String]] // the first field is for the protocol layer name and the second field is for the protocol layer id
     },
-    bump_region: bump_region_schema,
+    bump_region: String,
     _id: false
 });
 
@@ -96,21 +96,8 @@ const gpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
     process_node: String,
     max_thermal_design_power: String,
     // should i enforce any conditional rules among the following 4 attributes?
-    gpcs: {
-        type: Number,
-        min: 0
-    },
-    tpcs_per_gpc: {
-        type: Number,
-        min: 0
-    },
-    sms_per_tpc: {
-        type: Number,
-        min: 0
-    },
-    cores_per_sm: {
-        type: Number,
-        min: 0
+    sample: {
+        type: Object
     },
     l1_i_cache_per_core: [cache_schema],
     l1_d_cache_per_core: [cache_schema],
@@ -168,6 +155,7 @@ const chiplet_schema = new Schema({
     L3_caches: [cache_schema],
     voltage_domains: [voltage_domain_schema],
     interfaces: [interface_schema],
+    bump_regions: [bump_region_schema],
     base_clock_frequency: String
 });
 
