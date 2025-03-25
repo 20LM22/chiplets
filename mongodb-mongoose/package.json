@@ -11,7 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mongoose": "^8.10.1"
+    "assert": "^2.1.0",
+    "mongoose": "^8.10.1",
+    "mongoose-int32": "^0.6.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.6.0",
