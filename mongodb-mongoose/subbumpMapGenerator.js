@@ -6,7 +6,7 @@ export function generateSubbumpRegion() { // generate one based on BoW
 };
 
 // should also have some way to make them tx or rx patterns
-export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, diameter, hexagonal, half_slice) { // generate one based on BoW
+export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, radius, hexagonal, half_slice) { // generate one based on BoW
     // bumps property
     const bumps = [];
 
@@ -17,18 +17,21 @@ export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, diameter
     const row2_names_r = ["D0", "D2", "D4", "D6", "CK+", "D8", "D10", "D12", "D14", "FEC"];
     const power_r = ["gnd", "gnd", "pwr", "pwr", "gnd", "gnd", "pwr", "pwr", "gnd", "gnd"];
     
-    const row1_types_half = ["AUX", "D1", "D3", "D5", "D7", "CK-"];
-    const row1_names_half = ["AUX", "data", "data", "data", "data", "clock"];
+    const row1_types_half = ["AUX", "data", "data", "data", "data", "clock"];
+    const row1_names_half = ["AUX", "D1", "D3", "D5", "D7", "CK-"];
     const row2_types_half = ["data", "data", "data", "data", "clock", "FEC"];
     const row2_names_half = ["D0", "D2", "D4", "D6", "CK+", "FEC"];
     const power_half = ["gnd", "gnd", "pwr", "pwr", "gnd", "gnd"];
 
     // decide whether full or half slice
     const power_types = half_slice ? power_half : power_r;
+    const power_names = half_slice ? power_half : power_r;
+
     const row1_types = half_slice ? row1_types_half : row1_types_r;
     const row2_types = half_slice ? row2_types_half : row2_types_r;
-    const row1_names = half_slice ? row2_types_half : row2_types_r;
-    const row2_names = half_slice ? row2_types_half : row2_types_r;
+
+    const row1_names = half_slice ? row1_names_half : row1_names_r;
+    const row2_names = half_slice ? row2_names_half : row2_names_r;
 
     // the position of the bumps will be shifted as new bumps are added
     let x_pos = hexagonal ? 0.5*bump_pitch : 0;
@@ -39,8 +42,9 @@ export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, diameter
         bumps.push({
             x_pos: x_pos,
             y_pos: y_pos,
-            diameter: diameter,
-            bump_type: power_types[i]
+            radius: radius,
+            bump_type: power_types[i],
+            name: power_types[i]
         });
         x_pos += bump_pitch;
     }
@@ -53,7 +57,7 @@ export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, diameter
         bumps.push({
             x_pos: x_pos,
             y_pos: y_pos,
-            diameter: diameter,
+            radius: radius,
             bump_type: row1_types[i],
             name: row1_names[i]
         });
@@ -68,7 +72,7 @@ export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, diameter
         bumps.push({
             x_pos: x_pos,
             y_pos: y_pos,
-            diameter: diameter,
+            radius: radius,
             bump_type: row2_types[i],
             name: row2_names[i]
         });

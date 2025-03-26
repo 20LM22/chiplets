@@ -8,7 +8,7 @@ export function generate_cpu_chiplet() {
     const chiplet_id = faker.string.uuid(); // mongoose.ObjectId.toString(); // taking out some of the negatives
     const width = faker.number.float({ min: 10, max: 20, fractionDigits: 2 }); // mm
     const height = faker.number.float({ min: 10, max: 20, fractionDigits: 2 }); // mm
-    const area = width*height; // mm^2
+    const area = Math.round(width*height*100) / 100; // mm^2
     const process_node = faker.number.int({ min: 0, max: 100 }); // nm
     const base_clock_frequency = faker.number.int({ min: 0, max: 2000 }); // MHz
 
@@ -91,8 +91,8 @@ export function generate_cpu_chiplet() {
         const subbump_map_id = faker.helpers.arrayElement(["BoW_32-50bp-20dia-hex-full", "BoW_32-40bp-20dia-rect-full",
             "BoW_32-50bp-10dia-hex-full", "BoW_32-40bp-10dia-rect-full", "BoW_32-50bp-20dia-hex-half",
             "BoW_32-40bp-20dia-rect-half", "BoW_32-50bp-10dia-hex-half", "BoW_32-40bp-10dia-rect-half"]);
-        const x_offset = 2; // mm, should change these to allow for greater flexibility
-        const y_offset = 2;
+        const x_offset = faker.number.int({ min: 0, max: width }); // mm, should change these to allow for greater flexibility
+        const y_offset = faker.number.int({ min: 0, max: height });
         const rotation = 0; // degrees, radians? start this off as 0
         const flipped = faker.datatype.boolean(0); // true with 30% probability, start this off as 0
         const b = {
