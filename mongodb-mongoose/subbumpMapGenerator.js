@@ -1,14 +1,15 @@
 import { faker } from '@faker-js/faker';
-import Subbump_Map from './model/SubbumpMap.js'
+import SubbumpMap from './model/SubbumpMap.js'
 
 export function generateSubbumpRegion() { // generate one based on BoW
     // can also make synthetic subbump regions
 };
 
 // should also have some way to make them tx or rx patterns
-export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, radius, hexagonal, half_slice) { // generate one based on BoW
+export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, radius, hexagonal, half_slice, tx, unidirectional) { // generate one based on BoW
     // bumps property
     const bumps = [];
+    let counter = 0;
 
     // row options
     const row1_types_r = ["AUX", "data", "data", "data", "data", "clock", "data", "data", "data", "data"];
@@ -25,17 +26,78 @@ export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, radius, 
 
     // decide whether full or half slice
     const power_types = half_slice ? power_half : power_r;
-    const power_names = half_slice ? power_half : power_r;
 
-    const row1_types = half_slice ? row1_types_half : row1_types_r;
-    const row2_types = half_slice ? row2_types_half : row2_types_r;
+    const row1_types = tx && half_slice ? row1_types_half
+                    :  tx && !half_slice ? row1_types_r
+                    :  !tx && half_slice ? row2_types_half
+                    :  row2_types_r // aka !tx and !half_slice
 
-    const row1_names = half_slice ? row1_names_half : row1_names_r;
-    const row2_names = half_slice ? row2_names_half : row2_names_r;
+    const row2_types = tx && half_slice ? row2_types_half
+                    :  tx && !half_slice ? row2_types_r
+                    :  !tx && half_slice ? row1_types_half
+                    :  row1_types_r // aka !tx and !half_slice
+
+    const row1_names = tx && half_slice ? row1_names_half
+                    :  tx && !half_slice ? row1_names_r
+                    :  !tx && half_slice ? row2_names_half
+                    :  row2_names_r // aka !tx and !half_slice  
+
+    const row2_names = tx && half_slice ? row2_names_half
+                    :  tx && !half_slice ? row2_names_r
+                    :  !tx && half_slice ? row1_names_half
+                    :  row1_names_r // aka !tx and !half_slice
 
     // the position of the bumps will be shifted as new bumps are added
-    let x_pos = hexagonal ? 0.5*bump_pitch : 0;
+    let x_pos = 0; // hexagonal ? 0.5*bump_pitch : 0;
     let y_pos = 0;
+
+    // generate the first signal row
+    let index = tx ? 0 : row1_types.length-1; // figure out if we should start from the beginning or the end
+
+    for (let i = 0; i < row1_types.length; i++) { // first row is aux, d1, d3, d5, d7, ck-, d9, d11, d13, d15
+        bumps.push({
+            x_pos: x_pos,
+            y_pos: y_pos,
+            radius: radius,
+            bump_type: row1_types[index],
+            name: row1_names[index],
+            _id: faker.string.uuid(),
+            count: counter,
+            // BoW requires 0.75V support, can deviate but needs to still support 0.75V
+            voltage_domain: { operational_v: faker.helpers.arrayElement(['0.75', '1.0']), is_range: false },
+            clk_domain: {operational_clk: faker.helpers.arrayElement(['250', '500', '1000']), is_range: false}, // TXclk vs pclk --> txclk is specific
+        });
+        counter++;
+        x_pos += bump_pitch;
+        index = tx ? index + 1 : index - 1;
+    }
+
+    x_pos = hexagonal ? 0.5*bump_pitch : 0;
+    y_pos += hexagonal ? bump_pitch * Math.cos(Math.PI * (1/6)) : bump_pitch;
+
+    // generate the second signal row
+    index = tx ? 0 : row1_types.length-1; // figure out if we should start from the beginning or the end
+
+    for (let i = 0; i < row2_types.length; i++) { // second row is d0, d2, d4, d6, ck+, d8, d10, d12, d14, fec
+        bumps.push({
+            x_pos: x_pos,
+            y_pos: y_pos,
+            radius: radius,
+            bump_type: row2_types[index],
+            name: row2_names[index],
+            _id: faker.string.uuid(),
+            count: counter,
+            // BoW requires 0.75V support, can deviate but needs to still support 0.75V
+            voltage_domain: { operational_v: faker.helpers.arrayElement(['0.75', '1.0']), is_range: false },
+            clk_domain: {operational_clk: faker.helpers.arrayElement(['250', '500', '1000']), is_range: false}, // TXclk vs pclk --> txclk is specific
+        });
+        counter++;
+        x_pos += bump_pitch;
+        index = tx ? index + 1 : index - 1;
+    }
+
+    x_pos = 0;
+    y_pos += hexagonal ? bump_pitch * Math.cos(Math.PI * (1/6)) : bump_pitch;
 
     // power goes father away from the chiplet edge
     for (let i = 0; i < power_types.length; i++) {
@@ -44,50 +106,26 @@ export function generate_Bow_Subbump_Map(subbump_region_id, bump_pitch, radius, 
             y_pos: y_pos,
             radius: radius,
             bump_type: power_types[i],
-            name: power_types[i]
+            name: power_types[i],
+            _id: faker.string.uuid(),
+            count: counter,
+            // BoW requires 0.75V support, can deviate but needs to still support 0.75V
+            voltage_domain: { operational_v: faker.helpers.arrayElement(['0.75', '1.0']), is_range: false },
+            clk_domain: {operational_clk: faker.helpers.arrayElement(['250', '500', '1000']), is_range: false}, // TXclk vs pclk --> txclk is specific
         });
+        counter++;
         x_pos += bump_pitch;
     }
 
-    x_pos = 0;
-    y_pos += hexagonal ? bump_pitch * Math.cos(Math.PI * (1/6)) : bump_pitch;
-
-    // generate the first signal row
-    for (let i = 0; i < row1_types.length; i++) { // first row is aux, d1, d3, d5, d7, ck-, d9, d11, d13, d15
-        bumps.push({
-            x_pos: x_pos,
-            y_pos: y_pos,
-            radius: radius,
-            bump_type: row1_types[i],
-            name: row1_names[i]
-        });
-        x_pos += bump_pitch;
-    }
-
-    x_pos = hexagonal ? 0.5*bump_pitch : 0;
-    y_pos += hexagonal ? bump_pitch * Math.cos(Math.PI * (1/6)) : bump_pitch;
-
-    // generate the second signal row
-    for (let i = 0; i < row2_types.length; i++) { // second row is d0, d2, d4, d6, ck+, d8, d10, d12, d14, fec
-        bumps.push({
-            x_pos: x_pos,
-            y_pos: y_pos,
-            radius: radius,
-            bump_type: row2_types[i],
-            name: row2_names[i]
-        });
-        x_pos += bump_pitch;
-    }
-
-    const synthetic_subbump_map = new Subbump_Map({ // this is 1 subbump region
+    const synthetic_subbump_map = new SubbumpMap({ // this is 1 subbump region
+        width: x_pos,
+        height: y_pos,
         bumps: bumps, // a subbump region is a list of bumps that make up the region
-        // BoW requires 0.75V support, can deviate but needs to still support 0.75V
-        voltage_domain: { operational_v: "0.75", is_range: false },
-        clk_domain: {operational_clk: faker.helpers.arrayElement(['250', '500', '1000']), is_range: false}, // TXclk vs pclk --> txclk is specific
         _id: subbump_region_id // this is what's going to let us find these maps and attach them to chiplet interfaces
     });
-    
+
     // return the subbump map
+    console.log(synthetic_subbump_map);
     return synthetic_subbump_map;
 };
 

@@ -2,6 +2,89 @@ import { faker } from '@faker-js/faker';
 import Chiplet from './model/Chiplet.js';
 import mongoose from 'mongoose';
 
+export function generate_test_net_chiplet() {
+    const chiplet_id = faker.string.uuid(); // mongoose.ObjectId.toString(); // taking out some of the negatives
+    const width = 5 // faker.number.float({ min: 10, max: 20, fractionDigits: 2 }); // mm
+    const height = 5 // faker.number.float({ min: 10, max: 20, fractionDigits: 2 }); // mm
+
+    // generate synthetic bump maps
+    const num_interfaces = 1; // faker.number.int({ min: 1, max: 2 });
+    const bump_regions = [];
+
+    let subbump_map_id = "BoW_32-50bp-20dia-hex-half-tx";
+    let x_offset = 2.5 // faker.number.int({ min: 0, max: width }); // mm, should change these to allow for greater flexibility
+    let y_offset = 0.25 // faker.number.int({ min: 0, max: height });
+    let rotation = 0 // faker.helpers.arrayElement([0, 90, 180, 270]); // degrees, radians? start this off as 0
+    let flipped = false // faker.datatype.boolean(0.5); // true with 30% probability, start this off as 0
+    let b = {
+        subbump_map_id: subbump_map_id, // must match what is in the subbump collection
+        offset: [x_offset, y_offset],
+        rotation: rotation,
+        flipped: flipped,
+        _id: faker.string.uuid() // id of this bump map --> can be random, prepended with the chiplet name
+    };
+    bump_regions.push(b);
+
+    // subbump_map_id = "BoW_32-50bp-20dia-hex-half-tx";
+    // x_offset = faker.number.int({ min: 0, max: width }); // mm, should change these to allow for greater flexibility
+    // y_offset = faker.number.int({ min: 0, max: height });
+    // rotation = faker.helpers.arrayElement([0, 90, 180, 270]); // degrees, radians? start this off as 0
+    // flipped = faker.datatype.boolean(0.5); // true with 30% probability, start this off as 0
+    // b = {
+    //     subbump_map_id: subbump_map_id, // must match what is in the subbump collection
+    //     offset: [x_offset, y_offset],
+    //     rotation: rotation,
+    //     flipped: flipped,
+    //     _id: faker.string.uuid() // id of this bump map --> can be random, prepended with the chiplet name
+    // };
+    // bump_regions.push(b);    
+
+//    console.log(bump_regions);
+
+    // first generate bump map for each interface
+    // for (let i = 0; i < num_interfaces; i++) { // user has to select the matching subbump map?
+    //     // b is one bump region
+    //     const subbump_map_id = faker.helpers.arrayElement([
+    //        // "BoW_32-40bp-20dia-rect-full-tx", "BoW_32-50bp-10dia-hex-full-tx",
+    //        // "BoW_32-50bp-20dia-hex-half-tx", //"BoW_32-40bp-10dia-rect-half-tx",
+    //        // "BoW_32-50bp-10dia-hex-full-rx", "BoW_32-40bp-10dia-rect-full-rx",
+    //         "BoW_32-50bp-20dia-hex-full-tx" // , "BoW_32-40bp-10dia-rect-half-rx"
+    //     ]);
+    //     const x_offset = faker.number.int({ min: 0, max: width }); // mm, should change these to allow for greater flexibility
+    //     const y_offset = faker.number.int({ min: 0, max: height });
+    //     const rotation = faker.helpers.arrayElement([0, 90, 180, 270]); // degrees, radians? start this off as 0
+    //     const flipped = faker.datatype.boolean(0.5); // true with 30% probability, start this off as 0
+    //     const b = {
+    //         subbump_map_id: subbump_map_id, // must match what is in the subbump collection
+    //         offset: [x_offset, y_offset],
+    //         rotation: rotation,
+    //         flipped: flipped,
+    //         _id: faker.string.uuid() // id of this bump map --> can be random, prepended with the chiplet name
+    //     };
+    //     bump_regions.push(b);
+    // }
+
+    // interfaces
+    const interfaces = [];
+    for (let i = 0; i < num_interfaces; i++) {
+        const f = {
+            bump_region: (bump_regions[i])["_id"], // generate them in order, then match them up
+            _id: faker.string.uuid()
+        };
+        interfaces.push(f);
+    }
+
+    const synthetic_chiplet = new Chiplet({ // this is 1 chiplet, power efficiency
+        _id: chiplet_id,
+        width: width,
+        height: height,
+        interfaces: interfaces,
+        bump_regions: bump_regions
+    });
+    
+    return synthetic_chiplet;
+};
+
 export function generate_cpu_chiplet() {
     // maybe should use objectids? faker.database.mongodbObjectId() // 'e175cac316a79afdd0ad3afb'
     // have names?
@@ -88,13 +171,17 @@ export function generate_cpu_chiplet() {
     // first generate bump map for each interface
     for (let i = 0; i < num_interfaces; i++) { // user has to select the matching subbump map?
         // b is one bump region
-        const subbump_map_id = faker.helpers.arrayElement(["BoW_32-50bp-20dia-hex-full", "BoW_32-40bp-20dia-rect-full",
-            "BoW_32-50bp-10dia-hex-full", "BoW_32-40bp-10dia-rect-full", "BoW_32-50bp-20dia-hex-half",
-            "BoW_32-40bp-20dia-rect-half", "BoW_32-50bp-10dia-hex-half", "BoW_32-40bp-10dia-rect-half"]);
+        const subbump_map_id = faker.helpers.arrayElement(["BoW_32-50bp-20dia-hex-full-tx", "BoW_32-40bp-20dia-rect-full-tx",
+            "BoW_32-50bp-10dia-hex-full-tx", "BoW_32-40bp-10dia-rect-full-tx", "BoW_32-50bp-20dia-hex-half-tx",
+            "BoW_32-40bp-20dia-rect-half-tx", "BoW_32-50bp-10dia-hex-half-tx", "BoW_32-40bp-10dia-rect-half-tx",
+            "BoW_32-50bp-20dia-hex-full-rx", "BoW_32-40bp-20dia-rect-full-rx",
+            "BoW_32-50bp-10dia-hex-full-rx", "BoW_32-40bp-10dia-rect-full-rx", "BoW_32-50bp-20dia-hex-half-rx",
+            "BoW_32-40bp-20dia-rect-half-rx", "BoW_32-50bp-10dia-hex-half-rx", "BoW_32-40bp-10dia-rect-half-rx"
+        ]);
         const x_offset = faker.number.int({ min: 0, max: width }); // mm, should change these to allow for greater flexibility
         const y_offset = faker.number.int({ min: 0, max: height });
-        const rotation = 0; // degrees, radians? start this off as 0
-        const flipped = faker.datatype.boolean(0); // true with 30% probability, start this off as 0
+        const rotation = faker.helpers.arrayElement([0, 90, 180, 270]); // degrees, radians? start this off as 0
+        const flipped = faker.datatype.boolean(0.5); // true with 30% probability, start this off as 0
         const b = {
             subbump_map_id: subbump_map_id, // must match what is in the subbump collection
             offset: [x_offset, y_offset],

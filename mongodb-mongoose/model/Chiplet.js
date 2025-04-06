@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-// const Int32 = require("mongoose-int32").loadType(mongoose);
 import Int32 from 'mongoose-int32';
+import SubbumpMap from './SubbumpMap.js';
 const { Schema, model } = mongoose;
 
 const voltage_domain_schema = new Schema({
@@ -57,7 +57,7 @@ const interface_schema = new Schema({
         type: [[String, String]] // the first field is for the protocol layer name and the second field is for the protocol layer id
     },
     bump_region: String,
-    _id: false
+    _id: String
 });
 
 const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU clusters
@@ -163,26 +163,26 @@ cache_schema.pre('validate', function() {
     }
 });
 
-chiplet_schema.pre('validate', function() {
+chiplet_schema.pre('validate', async function() {
     if (this.area != undefined) {
-        const area = Number.parseFloat(this.area); // value will be in mm^2
-        if (area <= 0) {
+        // value will be in mm^2
+        if (this.area <= 0) {
             return new Promise((resolve, reject) => {
                 reject(new Error("Cannot have empty, negative chiplet area"));
             });
         }
     }
     if (this.width != undefined) {
-        const width = Number.parseFloat(this.width); // value will be in mm
-        if (width <= 0) {
+        // value will be in mm
+        if (this.width <= 0) {
             return new Promise((resolve, reject) => {
                 reject(new Error("Cannot have empty, negative chiplet width"));
             });
         }
     }
     if (this.height != undefined) {
-        const height = Number.parseFloat(this.height); // value will be in mm
-        if (height <= 0) {
+        // value will be in mm
+        if (this.height <= 0) {
             return new Promise((resolve, reject) => {
                 reject(new Error("Cannot have empty, negative chiplet height"));
             });
@@ -196,6 +196,60 @@ chiplet_schema.pre('validate', function() {
             });
         }
     }
+    // check that the bump maps don't go outside the chiplet boundary
+
+    const bump_regions = this.bump_regions; // an array
+
+    for (let i = 0; i < bump_regions.length; i++) { // iterate over all the bump regions to produce a unified bump map
+        const bump_region = bump_regions[i];
+        const offset_x = bump_region.offset[0]; // 2d array of x, y offsets
+        const offset_y = bump_region.offset[1]; // 2d array of x, y offsets
+        const subbump_map = await SubbumpMap.findById(bump_region.subbump_map_id);
+        for (let j = 0; j < subbump_map.bumps.length; j++) { // iterate over all the bumps in this subbump map
+            const bump = subbump_map.bumps[j]; // each bump object
+            let x_pos = bump.x_pos;
+            let y_pos = bump.y_pos;
+
+            if (bump_region.flipped) {
+                x_pos = -x_pos;
+            }
+
+            if (bump_region.rotation == 90) { // all rotations will be clockwise
+                const old_x_pos = x_pos;
+                x_pos = -y_pos;
+                y_pos = old_x_pos;
+            } else if (bump_region.rotation == 180) {
+                x_pos = -x_pos;
+                y_pos = -y_pos;
+            } else if (bump_region.rotation == 270) {
+                const old_x_pos = x_pos;
+                x_pos = y_pos;
+                y_pos = -old_x_pos;
+            }
+
+            const x_pos_um = x_pos + 1000*offset_x;
+            const y_pos_um = y_pos + 1000*offset_y;
+            const x_max = this.width*1000;
+            const y_max = this.height*1000;
+
+            if (x_pos_um > x_max || x_pos_um < 0) {
+                // throw error
+                return new Promise((resolve, reject) => {
+                    reject(new Error(`Bump ${bump._id} extends beyond the chiplet width.`));
+                });
+            } 
+            if (y_pos_um > y_max || y_pos_um < 0) {
+                // throw error
+                return new Promise((resolve, reject) => {
+                    reject(new Error(`Bump ${bump._id} extends beyond the chiplet height.`));
+                });
+            }
+
+        }
+    }
+
+    // end of bump verification
+    
 });
 
 voltage_domain_schema.pre('validate', function() {

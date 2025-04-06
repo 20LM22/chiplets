@@ -1,0 +1,110 @@
+{
+    "netlist": [
+        {
+            "id": 0,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump0",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump11"
+            ]
+        },
+        {
+            "id": 1,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump1",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump10"
+            ]
+        },
+        {
+            "id": 2,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump2",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump9"
+            ]
+        },
+        {
+            "id": 3,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump3",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump8"
+            ]
+        },
+        {
+            "id": 4,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump4",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump7"
+            ]
+        },
+        {
+            "id": 5,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump5",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump6"
+            ]
+        },
+        {
+            "id": 6,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump6",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump5"
+            ]
+        },
+        {
+            "id": 7,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump7",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump4"
+            ]
+        },
+        {
+            "id": 8,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump8",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump3"
+            ]
+        },
+        {
+            "id": 9,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump9",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump2"
+            ]
+        },
+        {
+            "id": 10,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump10",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump1"
+            ]
+        },
+        {
+            "id": 11,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump11",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump0"
+            ]
+        },
+        {
+            "id": 12,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump12",
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump13",
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump16",
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump17",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump12",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump13",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump16",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump17"
+            ]
+        },
+        {
+            "id": 13,
+            "net_pads": [
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump14",
+                "chiplet0.bumpregion.f6b3c502-3fba-4026-81d6-423366341fd9.bump15",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump14",
+                "chiplet1.bumpregion.a3321b2e-7aaa-4cb0-ab3a-24629d9ed1a8.bump15"
+            ]
+        }
+    ]
+}
