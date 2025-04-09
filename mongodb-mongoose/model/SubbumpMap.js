@@ -30,6 +30,28 @@ const subbumpMapSchema = new Schema({
 });
 
 // need to add hooks for unit validation and parsing, range checking, etc.
+subbumpMapSchema.pre('validate', function() {
+
+    for (let i = 0; i < this.bumps.length; i++) {
+        if (this.bumps[i].count != undefined) {
+            if (this.bumps[i].count < 0) {
+                return new Promise((resolve, reject) => {
+                    reject(new Error('Must have position bump counts.'));
+                });
+            }
+        }
+
+        // validate the rest of the bumps
+        if (this.bumps[i].radius == undefined) {
+            
+            if (this.bumps[i] < 0) {
+                return new Promise((resolve, reject) => {
+                    reject(new Error('Must have position bump counts.'));
+                });
+            }
+        }
+    }
+});
 
 const SubbumpMap = model('subbumpmap', subbumpMapSchema);
 export default SubbumpMap;

@@ -171,26 +171,34 @@ cache_schema.pre('validate', function() {
 
 bump_region_schema.pre('validate', async function() {
     const subbump_map = await SubbumpMap.findById(this.subbump_map_id);
-    console.log(subbump_map);
     if (subbump_map == null || subbump_map == undefined || subbump_map.length == 0) {
         // error
         return new Promise((resolve, reject) => {
             reject(new Error(`Subbump map with id ${this.subbump_map_id} does not exist in subbump map collection.`));
         });
     }
+
+    if (this.rotation == undefined) {
+        this.set('rotation', 0);
+    } else { // not undefined
+        if (this.rotation != 0 && this.rotation != 90 && this.rotation != 180 && this.rotation != 270) {
+            // error
+            return new Promise((resolve, reject) => {
+                reject(new Error(`Bump region rotation not specified in supported format: 0, 90, 180, 270.`));
+            });
+        }
+    }
+
+    if (this.flipped == undefined) {
+        this.set('flipped', false);
+    }
+
+    if (this.offset == undefined) {
+        this.set('offset', [0,0]);
+    }
 });
 
-// const bump_region_schema = new Schema({
-//     subbump_map_id: String, // the subbump maps should already exist and when the user creates a chiplet, they use an id from a dropdown/enum to select from the existing ones
-//     offset: [Number, Number],
-//     rotation: Number,
-//     flipped: Boolean,
-//     _id: String
-// });
-
-
 chiplet_schema.pre('validate', async function() {
-    console.log("validating chiplet");
     if (this.area != undefined) {
         // value will be in mm^2
         if (this.area <= 0) {

@@ -8,8 +8,5 @@ const exceptionSchema = new Schema({
     _id: String
 });
 
-// can only be filled once the chiplets are generated and chiplet ids are known
-// not that flexible
-
 const Exception = model('Exception', exceptionSchema);
 export default Exception;
