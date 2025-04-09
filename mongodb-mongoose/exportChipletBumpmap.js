@@ -65,9 +65,6 @@ export async function export_chiplet_bumpmap(chiplet_system_chiplet_id, chiplet_
         bumps: bump_arr
     };
 
-    console.log(chiplet.height);
-    console.log(chiplet.width);
-
     const bump_map_json = JSON.stringify(export_bumpmap);
 
     fs.writeFile('./subbump_map.json', bump_map_json, err => {

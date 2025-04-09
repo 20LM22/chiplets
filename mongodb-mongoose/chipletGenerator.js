@@ -225,6 +225,7 @@ export function generate_cpu_chiplet() {
             physical_layer: PHY,
             protocol_layer: protocol_layer,
             bump_region: (bump_regions[i])["_id"], // generate them in order, then match them up
+            _id: faker.string.uuid()
         };
         interfaces.push(f);
     }

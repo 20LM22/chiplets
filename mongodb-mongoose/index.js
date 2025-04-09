@@ -239,29 +239,31 @@ await Chiplet.insertMany(chiplets_to_insert, options);
 // 						];
 
 // const chiplet_id_arr = ["814b57d1-88ec-4ac9-80ea-97a27c6d9cdd", "8bef07f0-4c33-42ba-8f3d-942cb0bb7d29"];
-// const connection_input_arr = [[0, "53b6c63a-e659-422f-8168-729f3daf54e3", 1, "23a9d86b-2aba-4284-b413-d75f3e3daf0d"], // A
-// 							];
-// const chiplet_system = generate_chiplet_system(chiplet_id_arr, connection_input_arr);
-// const options = { ordered: true };
-// await ChipletSystem.insertMany(chiplet_system, options);
-// console.log("dsljlsjldj");
+// const connection_input_arr = [[0, "53b6c63a-e659-422f-8168-729f3daf54e3", 1, "23a9d86b-2aba-4284-b413-d75f3e3daf0d"]];
+const chiplet_id_arr = ["f576543a-0777-402c-8609-0d2360fa3397", "98bdd758-7d63-4af1-a812-63c9cfbef34b"];
+const connection_input_arr = [[0, "2e193296-5dff-49c3-a469-203a0a7b3691", 1, "4a763223-d3ab-4be2-99d6-848b949244f8"]];
+const chiplet_system = generate_chiplet_system(chiplet_id_arr, connection_input_arr);
+const options = { ordered: true };
+// console.log(chiplet_system);
+await ChipletSystem.insertMany(chiplet_system, options);
+console.log("dsljlsjldj");
 
 // generate json for chiplet system netlist
-const chiplet_system_chiplet_id = "93e1892b-c8d9-408e-8581-fba51be047b5"; // "905da64d-8625-4056-8c1c-49d69d17a2ea";
-let created = false;
-fs.access('./netlist.json', fs.constants.F_OK, (err) => {
-    created = err ? false : true;
-    console.log("created is: ");
-    console.log(created);
-    if (created == false) {
-        try {
-            export_netlist(chiplet_system_chiplet_id);
-            console.log("successfully exported bumpmap");
-        } catch (err) {
-            console.error(err);
-            console.log("did not export bumpmap");
-        } finally {
-            created = true;
-        }
-    }
-});
+// const chiplet_system_chiplet_id = "93e1892b-c8d9-408e-8581-fba51be047b5"; // "905da64d-8625-4056-8c1c-49d69d17a2ea";
+// let created = false;
+// fs.access('./netlist.json', fs.constants.F_OK, (err) => {
+//     created = err ? false : true;
+//     console.log("created is: ");
+//     console.log(created);
+//     if (created == false) {
+//         try {
+//             export_netlist(chiplet_system_chiplet_id);
+//             console.log("successfully exported bumpmap");
+//         } catch (err) {
+//             console.error(err);
+//             console.log("did not export bumpmap");
+//         } finally {
+//             created = true;
+//         }
+//     }
+// });

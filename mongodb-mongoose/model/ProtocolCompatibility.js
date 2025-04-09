@@ -6,7 +6,6 @@ const { Schema, model } = mongoose;
 const protocolcompatibilitySchema = new Schema({
     protocol_a_id: String,
     protocol_b_id: String,
-    compatible: Boolean,
     _id: false
 });
 

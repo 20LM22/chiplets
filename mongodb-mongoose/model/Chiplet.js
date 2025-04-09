@@ -28,7 +28,7 @@ const cache_schema = new Schema({
     capacity: Number,
     associativity: Int32,
     replacement_policy: String,
-    clock_frequency: Number,
+    // clock_frequency: Number,
     _id: false
 });
 
@@ -67,6 +67,7 @@ const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
     num_cores: Int32,
     clock_frequency: Number,
     process_node: Number,
+    substructure: mongoose.Mixed,
     max_thermal_design_power: Number,
     l1_icache: [cache_schema],
     l1_dcache: [cache_schema],
@@ -78,7 +79,7 @@ const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
 const gpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU clusters
     quantity: Int32,
     manufacturer: String,
-    processor_name: String,
+    name: String,
     clock_frequency: Number,
     process_node: Number,
     max_thermal_design_power: Number,
@@ -93,16 +94,17 @@ const gpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
     _id: false
 });
 
-const hbm_schema = new Schema({
-    quantity: Int32,
-    version: String, // HBM, HBM2, HBM3
-    capacity: Number,
-    bandwidth: Number, // enum: ["GB/s", "MB/s", "KB/s", "Gb/s", "Mb/s", "Kb/s"]
-    _id: false
-});
+// const hbm_schema = new Schema({
+//     quantity: Int32,
+//     version: String, // HBM, HBM2, HBM3
+//     capacity: Number,
+//     bandwidth: Number, // enum: ["GB/s", "MB/s", "KB/s", "Gb/s", "Mb/s", "Kb/s"]
+//     _id: false
+// });
 
 const memory_schema = new Schema({
     quantity: Int32,
+    name: String,
     capacity: Number,
     bandwidth: Number,
     _id: false
@@ -111,12 +113,13 @@ const memory_schema = new Schema({
 const chiplet_schema = new Schema({
     _id: String,
     name: String,
+    manufacturer: String,
     area: Number,
     width: Number,
     height: Number,
     process_node: Number,
     functionality: [String],
-    HBMs: [hbm_schema], // then would have a controller as an interface
+    HBMs: [memory_schema], // then would have a controller as an interface
     SRAMs: [memory_schema],
     DRAMs: [memory_schema],
     GPUs: [gpu_schema],
@@ -127,8 +130,9 @@ const chiplet_schema = new Schema({
     clock_domains: [clock_domain_schema],
     voltage_domains: [voltage_domain_schema],
     interfaces: [interface_schema], // then would have a controller as an interface, // DDR..DDR5, LPDDR...LPDDR5/5x
-    bump_regions: [bump_region_schema],
-    base_clock_frequency: String
+    bump_regions: [bump_region_schema], // general functionality
+    subcomponents: [mongoose.Mixed],
+//    base_clock_frequency: String
 });
 
 cache_schema.pre('validate', function() {
@@ -357,22 +361,22 @@ gpu_schema.pre('validate', function() {
     }
 });
 
-hbm_schema.pre('validate', function() {
-    if (this.capacity != undefined) {
-        if (this.capacity <= 0) {
-            return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
-            });
-        }
-    }
-    if (this.bandwidth != undefined) { // units will be GB/s
-        if (this.bandwidth <= 0) {
-            return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
-            });
-        }
-    }
-});
+// hbm_schema.pre('validate', function() {
+//     if (this.capacity != undefined) {
+//         if (this.capacity <= 0) {
+//             return new Promise((resolve, reject) => {
+//                 reject(new Error('something went wrong'));
+//             });
+//         }
+//     }
+//     if (this.bandwidth != undefined) { // units will be GB/s
+//         if (this.bandwidth <= 0) {
+//             return new Promise((resolve, reject) => {
+//                 reject(new Error('something went wrong'));
+//             });
+//         }
+//     }
+// });
 
 memory_schema.pre('validate', function() {
     if (this.capacity != undefined) {

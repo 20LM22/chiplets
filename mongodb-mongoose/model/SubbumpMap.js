@@ -3,8 +3,6 @@ import Int32 from 'mongoose-int32';
 const { Schema, model } = mongoose;
 
 const subbumpMapSchema = new Schema({
-    width: Number,
-    height: Number,
     bumps: [
         {
         _id: String,
