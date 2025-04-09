@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import Int32 from 'mongoose-int32';
 import SubbumpMap from './SubbumpMap.js';
+import Protocol from './Protocol.js';
+import PHY from './PHY.js';
 const { Schema, model } = mongoose;
 
 const voltage_domain_schema = new Schema({
@@ -140,34 +142,55 @@ cache_schema.pre('validate', function() {
     if (this.quantity != undefined) {
         if (this.quantity <= 0) {
             return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
+                reject(new Error('Cache count cannot be zero'));
             });
         }
     }
     if (this.associativity != undefined) {
         if (this.associativity <= 0) {
             return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
+                reject(new Error('Cache associativity must be positive integer.'));
             });
         }
     }
     if (this.capacity != undefined) {
         if (this.capacity <= 0) {
             return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
+                reject(new Error('Cache capacity cannot be zero, negative.'));
             });
         }
     }
     if (this.clock_frequency != undefined) {
         if (this.frequency <= 0) {
             return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
+                reject(new Error('Cache clock frequency cannot be zero, negative.'));
             });
         }
     }
 });
 
+bump_region_schema.pre('validate', async function() {
+    const subbump_map = await SubbumpMap.findById(this.subbump_map_id);
+    console.log(subbump_map);
+    if (subbump_map == null || subbump_map == undefined || subbump_map.length == 0) {
+        // error
+        return new Promise((resolve, reject) => {
+            reject(new Error(`Subbump map with id ${this.subbump_map_id} does not exist in subbump map collection.`));
+        });
+    }
+});
+
+// const bump_region_schema = new Schema({
+//     subbump_map_id: String, // the subbump maps should already exist and when the user creates a chiplet, they use an id from a dropdown/enum to select from the existing ones
+//     offset: [Number, Number],
+//     rotation: Number,
+//     flipped: Boolean,
+//     _id: String
+// });
+
+
 chiplet_schema.pre('validate', async function() {
+    console.log("validating chiplet");
     if (this.area != undefined) {
         // value will be in mm^2
         if (this.area <= 0) {
@@ -200,8 +223,8 @@ chiplet_schema.pre('validate', async function() {
             });
         }
     }
-    // check that the bump maps don't go outside the chiplet boundary
 
+    // check that the bump maps don't go outside the chiplet boundary
     const bump_regions = this.bump_regions; // an array
 
     for (let i = 0; i < bump_regions.length; i++) { // iterate over all the bump regions to produce a unified bump map
@@ -252,7 +275,9 @@ chiplet_schema.pre('validate', async function() {
         }
     }
 
-    // end of bump verification
+    // recursively add all clock and voltage domains in
+    // need to go through the bump maps
+
     
 });
 
@@ -264,7 +289,7 @@ voltage_domain_schema.pre('validate', function() {
         });
     } else if (this.is_range!=undefined) {
         if (this.is_range) { // if a range has been specified
-            this.operational_v = undefined; // only allow one to be active at a time
+            this.set('operational_v', undefined); // only allow one to be active at a time
             if (this.max_operational_v == undefined && this.min_operational_v == undefined) { // both undefined is a problem
                 return new Promise((resolve, reject) => {
                     reject(new Error("Operational voltage range is underspecified."));
@@ -296,8 +321,8 @@ voltage_domain_schema.pre('validate', function() {
                 }
             }
         } else if (!this.is_range) { // if a singular operational voltage has been specified
-            this.max_operational_v = undefined;
-            this.min_operational_v = undefined;
+            this.set('max_operational_v', undefined);
+            this.set('min_operational_v', undefined);
             if (this.operational_v == undefined) {
                 return new Promise((resolve, reject) => {
                     reject(new Error("Must specify an operational voltage."));
@@ -361,74 +386,45 @@ gpu_schema.pre('validate', function() {
     }
 });
 
-// hbm_schema.pre('validate', function() {
-//     if (this.capacity != undefined) {
-//         if (this.capacity <= 0) {
-//             return new Promise((resolve, reject) => {
-//                 reject(new Error('something went wrong'));
-//             });
-//         }
-//     }
-//     if (this.bandwidth != undefined) { // units will be GB/s
-//         if (this.bandwidth <= 0) {
-//             return new Promise((resolve, reject) => {
-//                 reject(new Error('something went wrong'));
-//             });
-//         }
-//     }
-// });
-
 memory_schema.pre('validate', function() {
     if (this.capacity != undefined) {
         if (this.capacity <= 0) {
             return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
+                reject(new Error('Memory capacity cannot be zero, negative.'));
             });
         }
     }
     if (this.bandwidth != undefined) { // units will be GB/s
         if (this.bandwidth <= 0) {
             return new Promise((resolve, reject) => {
-                reject(new Error('something went wrong'));
+                reject(new Error('Memory bandwidth cannot be zero, negative.'));
             });
         }
     }
 });
 
-interface_schema.pre('save', function() {
-    for (let i = 0; i < this.protocol.length; i++) { // go over all the protocols in this interface
-        protocol_doc = Protocol.findOne({name: (protocol_layer[i])[0]})
-        if (protocol_doc == null) {
-            (this.protocol_layer[i])[1] = null;
-        } else { // you found it
-            (this.protocol_layer[i])[1] = protocol_doc._id; // link them via id
+interface_schema.pre('validate', async function() {
+    for (let i = 0; i < this.protocol_layer.length; i++) { // go over all the protocols in this interface
+        const protocol_doc = await Protocol.findOne({name: this.protocol_layer[i][0]}).exec();
+        if (protocol_doc != undefined) {
+            const new_val = this.protocol_layer;
+            new_val[i] = [this.protocol_layer[i][0], protocol_doc._id];
+            this.set('protocol_layer', new_val);
         }
     }
-    PHY_doc = PHY.findOne({name: this.PHY_layer})
-    if (PHY_doc == null) {
-        (this.PHY_layer[i])[1] = null;
-    } else { // you found it
-        (this.PHY_layer[i])[1] = PHY_doc._id; // link them via id
+    const PHY_doc = await PHY.findOne({name: this.physical_layer}).exec();
+    if (PHY_doc != undefined) {
+        const new_val = [this.physical_layer[0], PHY_doc._id];
+        this.set('physical_layer', new_val);
     }
+
 });
 
 // latency: Number, specified for each interface, depends on rx, tx, and connection between them
 // interface schema: physical, protocol, bandwidth, latency = null,-1,0, undefined
 // here in the protocol section you'd link to the protocol document
-// mongomodeler
-// the comment has a movie id that tells you which movie it links to
 
-// make up the protocol information
 // info to know about protocols: max bandwidth, reach,
-            // protocol compatibiltiy document: two different references to protocol collections and a field for whether they are compatible
-            // assume that protocols are not compatible if they don't have a protocol compatibility document associated with them
-            // exceptions table = a collection
-                // each document lists two chiplets that are just not compatible,
-                    // which interface on the chiplet are we talking about --> we say that even if the protocols are compatible, then they are still not compatible overall
-
-// first documents = chiplet, has keys that refer to different documents representing protocols
-// new collection for protocols
-// in chiplet schema, can have a list of protocols associated by id
 
 /* Note "bumps" is a feature of the interfaces, not the chiplet
 or rather, the different interfaces dictate what the bump layout of the chiplet look like

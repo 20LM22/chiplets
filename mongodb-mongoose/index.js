@@ -77,34 +77,34 @@ await Chiplet.insertMany(chiplets_to_insert, options);
 
 // generate and insert synthetic chiplets
 
-// const NUM_SYNTHETIC_CHIPLETS = 20;
-// const synthetic_chiplets = [];
-// for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
-//     // generate chiplet returns a chiplet doc to insert and a bunch of subbump region docs to insert
-//     const synthetic_chiplet = generate_cpu_chiplet(); // maybe could break it down into generating basic types/functionalities of chiplets?
-//     // console.log("here's the synthetic interface before:\n");
-//     // console.log(synthetic_chiplet.interfaces[0]);
-//     try {
-//         await synthetic_chiplet.validate();
-//         synthetic_chiplets.push(synthetic_chiplet);
-//         console.log("successfully validated chiplet");
-//     } catch (err) {
-//         console.error(err);
-//         console.log("did not validate chiplet");
-//     }
+const NUM_SYNTHETIC_CHIPLETS = 1;
+const synthetic_chiplets = [];
+for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
+    // generate chiplet returns a chiplet doc to insert and a bunch of subbump region docs to insert
+    const synthetic_chiplet = generate_cpu_chiplet(); // maybe could break it down into generating basic types/functionalities of chiplets?
+    // console.log("here's the synthetic interface before:\n");
+    // console.log(synthetic_chiplet.interfaces[0]);
+    try {
+        await synthetic_chiplet.validate();
+        synthetic_chiplets.push(synthetic_chiplet);
+        console.log("successfully validated chiplet");
+    } catch (err) {
+        console.error(err);
+        console.log("did not validate chiplet");
+    }
 
-//     // console.log("here's the synthetic interface after:\n");
-//     // console.log(synthetic_chiplet.interfaces[0]);
+    // console.log("here's the synthetic interface after:\n");
+    // console.log(synthetic_chiplet.interfaces[0]);
 
-//     // problem: it's not linking the ids of the protocols and phys to their corresponding documents
-//     // wait but that happens on save so it's fine
-// }
+    // problem: it's not linking the ids of the protocols and phys to their corresponding documents
+    // wait but that happens on save so it's fine
+}
 
-// console.log("number of chiplets in chiplet array: \n");
-// console.log(synthetic_chiplets.length);
-// const options = { ordered: true };
-// await Chiplet.insertMany(synthetic_chiplets, options);
-// console.log("done");
+console.log("number of chiplets in chiplet array: \n");
+console.log(synthetic_chiplets.length);
+const options = { ordered: true };
+await Chiplet.insertMany(synthetic_chiplets, options);
+console.log("done");
 
 // const NUM_SYNTHETIC_CHIPLETS = 20;
 // const synthetic_chiplets = [];
@@ -114,18 +114,18 @@ await Chiplet.insertMany(chiplets_to_insert, options);
 //     try {
 //         await synthetic_chiplet.validate();
 //         synthetic_chiplets.push(synthetic_chiplet);
-//         console.log("successfully validated chiplet");
+//         // console.log("successfully validated chiplet");
 //     } catch (err) {
 //         console.error(err);
 //         console.log("did not validate chiplet");
 //     }
 // }
 
-// console.log("number of chiplets in chiplet array: \n");
-// console.log(synthetic_chiplets.length);
+// // console.log("number of chiplets in chiplet array: \n");
+// // console.log(synthetic_chiplets.length);
 // const options = { ordered: true };
 // const synthetic_chiplet = generate_test_net_chiplet();
-// console.log(synthetic_chiplet);
+// // console.log(synthetic_chiplet);
 // await Chiplet.insertMany(synthetic_chiplet, options);
 // console.log("done");
 
@@ -240,13 +240,13 @@ await Chiplet.insertMany(chiplets_to_insert, options);
 
 // const chiplet_id_arr = ["814b57d1-88ec-4ac9-80ea-97a27c6d9cdd", "8bef07f0-4c33-42ba-8f3d-942cb0bb7d29"];
 // const connection_input_arr = [[0, "53b6c63a-e659-422f-8168-729f3daf54e3", 1, "23a9d86b-2aba-4284-b413-d75f3e3daf0d"]];
-const chiplet_id_arr = ["f576543a-0777-402c-8609-0d2360fa3397", "98bdd758-7d63-4af1-a812-63c9cfbef34b"];
-const connection_input_arr = [[0, "2e193296-5dff-49c3-a469-203a0a7b3691", 1, "4a763223-d3ab-4be2-99d6-848b949244f8"]];
-const chiplet_system = generate_chiplet_system(chiplet_id_arr, connection_input_arr);
-const options = { ordered: true };
-// console.log(chiplet_system);
-await ChipletSystem.insertMany(chiplet_system, options);
-console.log("dsljlsjldj");
+// const chiplet_id_arr = ["f576543a-0777-402c-8609-0d2360fa3397", "98bdd758-7d63-4af1-a812-63c9cfbef34b"];
+// const connection_input_arr = [[0, "2e193296-5dff-49c3-a469-203a0a7b3691", 1, "4a763223-d3ab-4be2-99d6-848b949244f8"]];
+// const chiplet_system = generate_chiplet_system(chiplet_id_arr, connection_input_arr);
+// const options = { ordered: true };
+// // console.log(chiplet_system);
+// await ChipletSystem.insertMany(chiplet_system, options);
+// console.log("dsljlsjldj");
 
 // generate json for chiplet system netlist
 // const chiplet_system_chiplet_id = "93e1892b-c8d9-408e-8581-fba51be047b5"; // "905da64d-8625-4056-8c1c-49d69d17a2ea";

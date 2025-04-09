@@ -96,8 +96,8 @@ chiplet_system_schema.pre('validate', async function() {
                 });
             }
 
-            const phy0 = chiplet0_interface.physical_layer[0]; // get first element in case phy doc doesn't exist
-            const phy1 = chiplet1_interface.physical_layer[0];
+            const phy0 = chiplet0_interface.physical_layer[0].split('-')[0]; // get first element in case phy doc doesn't exist
+            const phy1 = chiplet1_interface.physical_layer[0].split('-')[0];
             if (phy0 != phy1) {
                 // error
                 return new Promise((resolve, reject) => {

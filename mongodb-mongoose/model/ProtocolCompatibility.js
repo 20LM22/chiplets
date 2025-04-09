@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-import { faker } from '@faker-js/faker';
 
 const { Schema, model } = mongoose;
 
 const protocolcompatibilitySchema = new Schema({
     protocol_a_id: String,
     protocol_b_id: String,
-    _id: false
+    _id: String
 });
 
 // ccix controller ip
@@ -35,7 +34,6 @@ export function generate_synthetic_protocol_compatibility_docs() {
             const compat_doc = new ProtocolCompatibility({
                 protocol_a_id: ids[i],
                 protocol_b_id: ids[j],
-                compatible: faker.datatype.boolean(0.3)
             });
             synthetic_compat.push(compat_doc);
         }
@@ -44,7 +42,6 @@ export function generate_synthetic_protocol_compatibility_docs() {
         const compat_doc = new ProtocolCompatibility({
             protocol_a_id: ids[i],
             protocol_b_id: ids[i],
-            compatible: true
         });
         synthetic_compat.push(compat_doc);
     } return synthetic_compat;
