@@ -53,7 +53,7 @@ export async function export_chiplet_bumpmap(chiplet_system_chiplet_id, chiplet_
                 y_pos: Math.round(1000*(y_pos + 1000*offset_y)),
                 radius: Math.round(bump.radius*1000),
                 name: bump.name,
-                id: chiplet_id + ".bumpregion." + bump_region._id + ".bump" + bump.count // bump._id
+                id: chiplet_id + ".bumpregion." + bump_region._id + ".bump" + bump._id // bump.count
             };
             bump_arr.push(b);
         }

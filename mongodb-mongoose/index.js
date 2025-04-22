@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import Chiplet from './model/Chiplet.js';
-import { generate_Bow_Subbump_Map } from './subbumpMapGenerator.js';
+import { generate_bidirectional_Bow_Subbump_Map } from './subbumpMapGenerator.js';
 import SubbumpMap from './model/SubbumpMap.js';
 import { generate_PHY } from './protocolAndPHYGenerator.js';
 import PHY from './model/PHY.js';
 import Protocol from './model/Protocol.js';
-import { generate_cpu_chiplet, generate_test_net_chiplet } from './chipletGenerator.js';
+import { generate_example_chiplet, generate_cpu_chiplet, generate_test_net_chiplet, generate_epyc_ccd_chiplet, generate_epyc_iod_chiplet } from './chipletGenerator.js';
 import { export_chiplet_bumpmap } from './exportChipletBumpmap.js';
 import { export_netlist } from './netlistGenerator.js';
 import assert from 'assert';
@@ -15,96 +15,47 @@ import { generate_chiplet_system } from './chipletSystemGenerator.js';
 
 mongoose.connect("mongodb+srv://Lauren:dtuk2o8uCrB4FYFa@chipletrepository.rgz8c.mongodb.net/chiplet_repository")
 
-// const seven_nm_4_GHz_Arm_Core_Based_CoWoS = new Chiplet({ // this is 1 chiplet
-//     area: {value: 27.28, units: "mm^2"},
-//     width: {value: 4.4, units: "mm"},
-//     height: {value: 6.2, units: "mm"},
-//     process_node: {value: 7, units: "nm"},
-//     bumps: {pitch: {value: 40, units: "um"}}, // no shape, material provided
-//     // can provide an array of different cores --> not sure if this is set up right
-//     CPUs: [{processor_name: "Arm Cortex-A72", num_cores: 4, clock_frequency: {value: 4, units: "GHz"}, l1_cache:[{clock_frequency: {value:4,units:"GHz"}}]}], 
-//     L2_caches: [{quantity:2, capacity:{value:2, units:"MB"}, clock_frequency:{value:2,units:"GHz"}}],
-//     L3_caches: [{quantity:1, capacity:{value:6, units:"MB"}, clock_frequency:{value:1,units:"GHz"}}],
-//     base_clock_frequency: {value: 4, units:"GHz"},
-//     physical_layer: "LIPINCON",
-//     protocol_layer: "LIPINCON"
-// });
-
-// ariane cores are used for configuration and setup
-
-/* These would be good to add for the physical layer schemas 
-The chiplets communicate with each other through ultrashort reach
-(0.5 mm long) interposer channels using a Low-voltage-InPackage-INterCONnect (LIPINCON)
-clock-forwarded parallel interface */
-/*
-Physical layer: {
-	Type: LIPINCON
-	Subnet design: point to point
-	Size: 0.42 mm × 2.4 mm
-	Quantity: 2,
-	Number of pins: 320
-	Bandwidth density: 1.6-Tb/s/mm2
-	Energy efficiency: 0.56-pJ/bit,
-	Bandwidth_max:  8 Gb/s/pin,
-	Bandwidth_aggregate: 320 GB/s
-	Eye: {
-Width: 86-ps
-		Height: 244-mv
-		Signal swing: 0.3 V
-}
-}*/
-
-// const manticore = new Chiplet({ // this is 1 chiplet
-//     area: {value: 222, units: "mm^2"},
-//     width: {value: 14.9, units: "mm"},
-//     height: {value: 14.9, units: "mm"},
-//     process_node: {value: 22, units: "nm"},
-//     // can provide an array of different cores --> not sure if this is set up right
-//     HBM: [{quantity:1, version:"HBM2", capacity:{value:8,units:"GB"}, controller:{bandwidth:{value:256,units:"GB/s"}}}],
-//     CPUs: [{processor_name: "Ariane RV64GC", num_cores: 4}], 
-//     L2_caches: [{quantity:1, capacity:{value:27, units:"MB"}}],
-//     physical_layer: "16x PCIe", // how to encode the bandwidth?
-//     protocol_layer: "16x PCIe"
-// });
-
-// await Chiplet.insertOne(manticore);
-
-/*
-const chiplets_to_insert = [seven_nm_4_GHz_Arm_Core_Based_CoWoS, manticore]; // make an array of the chiplets
-const options = { ordered: true };
-await Chiplet.insertMany(chiplets_to_insert, options);
-*/
-
 // generate and insert synthetic chiplets
 
-const NUM_SYNTHETIC_CHIPLETS = 1;
-const synthetic_chiplets = [];
-for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
-    // generate chiplet returns a chiplet doc to insert and a bunch of subbump region docs to insert
-    const synthetic_chiplet = generate_cpu_chiplet(); // maybe could break it down into generating basic types/functionalities of chiplets?
-    // console.log("here's the synthetic interface before:\n");
-    // console.log(synthetic_chiplet.interfaces[0]);
-    try {
-        await synthetic_chiplet.validate();
-        synthetic_chiplets.push(synthetic_chiplet);
-        console.log("successfully validated chiplet");
-    } catch (err) {
-        console.error(err);
-        console.log("did not validate chiplet");
-    }
+// const NUM_SYNTHETIC_CHIPLETS = 1;
+// const synthetic_chiplets = [];
+// for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
+//     // generate chiplet returns a chiplet doc to insert and a bunch of subbump region docs to insert
+//     const synthetic_chiplet =  generate_epyc_chiplet("EPYC_type_1", "EYPC Type 1 Chiplet", subbump_map_id, bump_pitch, subbump_width) // generate_example_chiplet("Simba_type_2", "Simba Type 2 Chiplet", "BoW_32-50bp-10dia-hex-full-bi-example", 50, 39);
+// 	// console.log("here's the synthetic interface before:\n");
+//     // console.log(synthetic_chiplet.interfaces[0]);
+//     try {
+//         await synthetic_chiplet.validate();
+//         synthetic_chiplets.push(synthetic_chiplet);
+//         console.log("successfully validated chiplet");
+//     } catch (err) {
+//         console.error(err);
+//         console.log("did not validate chiplet");
+//     }
 
-    // console.log("here's the synthetic interface after:\n");
-    // console.log(synthetic_chiplet.interfaces[0]);
+//     // console.log("here's the synthetic interface after:\n");
+//     // console.log(synthetic_chiplet.interfaces[0]);
+// }
 
-    // problem: it's not linking the ids of the protocols and phys to their corresponding documents
-    // wait but that happens on save so it's fine
-}
-
-console.log("number of chiplets in chiplet array: \n");
-console.log(synthetic_chiplets.length);
-const options = { ordered: true };
-await Chiplet.insertMany(synthetic_chiplets, options);
-console.log("done");
+// const NUM_SYNTHETIC_CHIPLETS = 1;
+// const synthetic_chiplets = [];
+// for (let i = 0; i < NUM_SYNTHETIC_CHIPLETS; i++) {
+//     // generate chiplet returns a chiplet doc to insert and a bunch of subbump region docs to insert
+//     const synthetic_chiplet =  generate_epyc_iod_chiplet();
+//     try {
+//         await synthetic_chiplet.validate();
+//         synthetic_chiplets.push(synthetic_chiplet);
+//         console.log("successfully validated chiplet");
+//     } catch (err) {
+//         console.error(err);
+//         console.log("did not validate chiplet");
+//     }
+// }
+// console.log("number of chiplets in chiplet array: \n");
+// console.log(synthetic_chiplets.length);
+// const options = { ordered: true };
+// await Chiplet.insertMany(synthetic_chiplets, options);
+// console.log("done");
 
 // const NUM_SYNTHETIC_CHIPLETS = 20;
 // const synthetic_chiplets = [];
@@ -121,34 +72,40 @@ console.log("done");
 //     }
 // }
 
-// // console.log("number of chiplets in chiplet array: \n");
-// // console.log(synthetic_chiplets.length);
 // const options = { ordered: true };
 // const synthetic_chiplet = generate_test_net_chiplet();
-// // console.log(synthetic_chiplet);
 // await Chiplet.insertMany(synthetic_chiplet, options);
 // console.log("done");
 
-// a way around this: call validate on each one as it's generated, if it's valid add it to arr, if its not valid, log message and don't add it
-// calling save or validate on a parent doc triggers save/validate on the subdocs... phew
+// Generate and insert subbump maps for BoW-32S
+let subbump_maps = []; // 50bp, 20dia
+// // // let map = generate_bidirectional_Bow_Subbump_Map("test8", 50, 10, true, false);
+// // // subbump_maps.push(map);
+// // let map = generate_bidirectional_Bow_Subbump_Map("BoW_32-55bp-15dia-rect-full-bi-example", 55, 7.5, false, false);
+// // subbump_maps.push(map);
+// // map = generate_bidirectional_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-full-bi-example", 50, 5, true, false);
+// // subbump_maps.push(map);
 
-// Generate and insert subbump maps for BoW-32
-// let subbump_maps = []; // 50bp, 20dia
-// let map = generate_Bow_Subbump_Map("BoW_32-50bp-20dia-hex-full-tx", 50, 10, true, false, true);
+// let map = generate_bidirectional_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-full-bi-example", 50, 5, true, false);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-40bp-20dia-rect-full-tx", 40, 10, false, false, true);
+// map = generate_bidirectional_Bow_Subbump_Map("BoW_32-55bp-15dia-rect-full-bi-example", 55, 7.5, false, false);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-full-tx", 50, 5, true, false, true);
+
+// PCIE
+// let map = generate_bidirectional_Bow_Subbump_Map("BoW_32-40bp-20dia-hex-rect-bi-example", 40, 10, false, false);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-40bp-10dia-rect-full-tx", 40, 5, false, false, true);
+// map = generate_bidirectional_Bow_Subbump_Map("BoW_32-50bp-10dia-rect-hex-bi-example", 50, 5, true, false);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-50bp-20dia-hex-half-tx", 50, 10, true, true, true);
+
+// let map = generate_bidirectional_Bow_Subbump_Map("BoW_32-150bp-20dia-hex-full-bi-example", 150, 10, true, false);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-40bp-20dia-rect-half-tx", 40, 10, false, true, true);
+// map = generate_bidirectional_Bow_Subbump_Map("BoW_32-150bp-10dia-hex-full-bi-example", 150, 5, true, false);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-half-tx", 50, 5, true, true, true);
+// map = generate_bidirectional_Bow_Subbump_Map("BoW_32-40bp-20dia-rect-half-bi", 40, 10, false, true);
 // subbump_maps.push(map);
-// map = generate_Bow_Subbump_Map("BoW_32-40bp-10dia-rect-half-tx", 40, 5, false, true, true);
+// map = generate_bidirectional_Bow_Subbump_Map("BoW_32-50bp-10dia-hex-half-bi", 50, 5, true, true);
+// subbump_maps.push(map);
+// map = generate_bidirectional_Bow_Subbump_Map("BoW_32-40bp-10dia-rect-half-bi", 40, 5, false, true);
 // subbump_maps.push(map);
 
 // map = generate_Bow_Subbump_Map("BoW_32-50bp-20dia-hex-full-rx", 50, 10, true, false, false);
@@ -183,13 +140,38 @@ console.log("done");
 
 // await Protocol.insertOne(protocol);
 
-// insert compatibility documents
-// syn_protocol_compat = generate_synthetic_protocol_compatibility_docs();
-// await ProtocolCompatibility.insertMany(syn_protocol_compat, options = { ordered: true });
+// Example 1 interfaces
+// const CXL_cache_protocol = new Protocol({ // not sure if math for ucie is right
+//     name: "CXL.cache 1.0",
+//     _id: "CXL-cache-1-example" // this is what's going to let us find these maps and attach them to chiplet interfaces
+// });
+
+// Example 2 interfaces
+// const pcie_128_protocol = new Protocol({ // not sure if math for ucie is right
+//     name: "PCIe 4 x128",
+//     num_lanes: 128,
+//     _id: "PCIe-4-128-example" // this is what's going to let us find these maps and attach them to chiplet interfaces
+// });
+// const pcie_64_protocol = new Protocol({ // not sure if math for ucie is right
+//     name: "PCIe 4 x64",
+//     num_lanes: 64,
+//     _id: "PCIe-4-64-example" // this is what's going to let us find these maps and attach them to chiplet interfaces
+// });
+
+// const Bow_32_PHY = new PHY({
+// 	name: "BoW-32",
+// 	max_bandwidth: 16, // 128 Gb/s
+// 	reach: 4,
+// 	clock_type: "forwarded",
+// 	_id: "BoW-32-4-example"
+// });
+
+// await PHY.insertOne(Bow_32_PHY);
+// await Protocol.insertOne(pcie_64_protocol);
 
 // generate the json file
-// const chiplet_id = "chiplet1";
-// const chiplet_system_chiplet_id = "93e1892b-c8d9-408e-8581-fba51be047b5";
+// const chiplet_id = "chiplet4";
+// const chiplet_system_chiplet_id = "epyc_example"; // "exampleSystem12"; // "8a805e9c-4ec3-4442-888b-211d74ce2ad2";
 // let created = false;
 // fs.access('./subbump_map.json', fs.constants.F_OK, (err) => {
 //     created = err ? false : true;
@@ -242,28 +224,72 @@ console.log("done");
 // const connection_input_arr = [[0, "53b6c63a-e659-422f-8168-729f3daf54e3", 1, "23a9d86b-2aba-4284-b413-d75f3e3daf0d"]];
 // const chiplet_id_arr = ["f576543a-0777-402c-8609-0d2360fa3397", "98bdd758-7d63-4af1-a812-63c9cfbef34b"];
 // const connection_input_arr = [[0, "2e193296-5dff-49c3-a469-203a0a7b3691", 1, "4a763223-d3ab-4be2-99d6-848b949244f8"]];
-// const chiplet_system = generate_chiplet_system(chiplet_id_arr, connection_input_arr);
+
+// const chiplet_id_arr = ["example8", "example8"];
+// const connection_input_arr = [[0, "ca900d8f-ba4e-4655-8a3b-37a9a49ba4d5", 1, "50d17a02-2b0d-4697-aea2-896e1af7b4ec"]];
+
+// const chiplet_id_arr = ["Simba_type_1", "Simba_type_2", "Simba_type_1",
+// 						"Simba_type_2", "Simba_type_1", "Simba_type_2",
+// 						"Simba_type_1", "Simba_type_2", "Simba_type_1"
+// 						];
+// const connection_input_arr = [
+// 							[0, "east", 1, "west"],
+// 							[1, "east", 2, "west"],
+// 							[0, "south", 3, "north"],
+// 							[1, "south", 4, "north"],
+// 							[2, "south", 5, "north"],
+// 							[3, "east", 4, "west"],
+// 							[4, "east", 5, "west"],
+// 							[3, "south", 6, "north"],
+// 							[4, "south", 7, "north"],
+// 							[5, "south", 8, "north"],
+// 							[6, "east", 7, "west"],
+// 							[7, "east", 8, "west"],
+// 						];
+// const chiplet_system = generate_chiplet_system("Simba_example", chiplet_id_arr, connection_input_arr);
+// const options = { ordered: true };
+// // console.log(chiplet_system);
+// await ChipletSystem.insertMany(chiplet_system, options);
+// console.log("dsljlsjldj");
+
+// const chiplet_id_arr = ["EPYC_CCD", "EPYC_CCD", "EPYC_IOD", "EPYC_CCD", "EPYC_CCD"];
+// const connection_input_arr = [
+// 							[0, "bottom", 2, "ul1"],
+// 							[0, "top", 2, "ul2"],
+// 							[1, "top", 2, "ur1"],
+// 							[1, "bottom", 2, "ur2"],
+// 							[3, "bottom", 2, "bl1"],
+// 							[3, "top", 2, "bl2"],
+// 							[4, "top", 2, "br1"],
+// 							[4, "bottom", 2, "br2"]
+// 						];
+// const chiplet_system = generate_chiplet_system("epyc_example", chiplet_id_arr, connection_input_arr);
 // const options = { ordered: true };
 // // console.log(chiplet_system);
 // await ChipletSystem.insertMany(chiplet_system, options);
 // console.log("dsljlsjldj");
 
 // generate json for chiplet system netlist
-// const chiplet_system_chiplet_id = "93e1892b-c8d9-408e-8581-fba51be047b5"; // "905da64d-8625-4056-8c1c-49d69d17a2ea";
-// let created = false;
-// fs.access('./netlist.json', fs.constants.F_OK, (err) => {
-//     created = err ? false : true;
-//     console.log("created is: ");
-//     console.log(created);
-//     if (created == false) {
-//         try {
-//             export_netlist(chiplet_system_chiplet_id);
-//             console.log("successfully exported bumpmap");
-//         } catch (err) {
-//             console.error(err);
-//             console.log("did not export bumpmap");
-//         } finally {
-//             created = true;
-//         }
-//     }
-// });
+const chiplet_system_chiplet_id = "epyc_example"; // "exampleSystem12"; // "8a805e9c-4ec3-4442-888b-211d74ce2ad2";
+let created = false;
+fs.access('./netlist.json', fs.constants.F_OK, (err) => {
+    created = err ? false : true;
+    console.log("created is: ");
+    console.log(created);
+    if (created == false) {
+        try {
+            export_netlist(chiplet_system_chiplet_id);
+            console.log("successfully exported bumpmap");
+        } catch (err) {
+            console.error(err);
+            console.log("did not export bumpmap");
+        } finally {
+            created = true;
+        }
+    }
+});
+
+// note to self: first example had these qualities:
+// let map = generate_bidirectional_Bow_Subbump_Map("test8", 50, 10, true, false);
+// chiplet = example8
+// system = exampleSystem12

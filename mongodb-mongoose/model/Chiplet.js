@@ -6,22 +6,18 @@ import PHY from './PHY.js';
 const { Schema, model } = mongoose;
 
 const voltage_domain_schema = new Schema({
-    // should there be a way to attach a particular voltage domain to a certain component?
-    // for example, link a voltage domain to a ddr document
     operational_v: Number,
     min_operational_v: Number,
     max_operational_v: Number,
-    is_range: Boolean, // boolean to choose between whether this is a range or a single value
+    is_range: Boolean,
     _id: false
 });
 
 const clock_domain_schema = new Schema({
-    // should there be a way to attach a particular voltage domain to a certain component?
-    // for example, link a voltage domain to a ddr document
     operational_freq: Number,
     min_operational_freq: Number,
     max_operational_freq: Number,
-    is_range: Boolean, // boolean to choose between whether this is a range or a single value
+    is_range: Boolean,
     _id: false
 });
 
@@ -29,21 +25,10 @@ const cache_schema = new Schema({
     quantity: Int32,
     capacity: Number,
     associativity: Int32,
+    bandwidth: Number,
     replacement_policy: String,
-    // clock_frequency: Number,
     _id: false
 });
-
-// generate the bump map first
-// hbm subbump maps are not chiplet specific
-// make the subbump map ids clear to begin with, not random digits
-// BoW slice 2
-
-// don't create subbump maps when the chiplet is created, just create some subbump map documents beforehand,
-// give them descriptive names and then just randomly choose them from an enum
-
-// can use transactions to prevent unique subbump maps from going into the database if their associated
-// chiplet fails validation
 
 const bump_region_schema = new Schema({
     subbump_map_id: String, // the subbump maps should already exist and when the user creates a chiplet, they use an id from a dropdown/enum to select from the existing ones
@@ -67,10 +52,7 @@ const cpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
     manufacturer: String,
     name: String,
     num_cores: Int32,
-    clock_frequency: Number,
-    process_node: Number,
     substructure: mongoose.Mixed,
-    max_thermal_design_power: Number,
     l1_icache: [cache_schema],
     l1_dcache: [cache_schema],
     l2_cache: [cache_schema],
@@ -82,27 +64,11 @@ const gpu_schema = new Schema({ // CPU = compute cluster, compute cluster = CPU 
     quantity: Int32,
     manufacturer: String,
     name: String,
-    clock_frequency: Number,
-    process_node: Number,
-    max_thermal_design_power: Number,
-    flops: Number,
-    Gpixels_ps: Number,
-    Grays_ps: Number,
+    gflops: Number,
+    tops: Number,
     substructure: mongoose.Mixed, // user free to design subschema that makes sense for that gpu
-    l1_i_cache_per_core: [cache_schema], // maybe it makes sense to put these in the substructure schema as well?
-    l1_d_cache_per_core: [cache_schema],
-    l2_cache_per_sm: [cache_schema],
-    l3_cache: [cache_schema],
     _id: false
 });
-
-// const hbm_schema = new Schema({
-//     quantity: Int32,
-//     version: String, // HBM, HBM2, HBM3
-//     capacity: Number,
-//     bandwidth: Number, // enum: ["GB/s", "MB/s", "KB/s", "Gb/s", "Mb/s", "Kb/s"]
-//     _id: false
-// });
 
 const memory_schema = new Schema({
     quantity: Int32,
@@ -134,7 +100,6 @@ const chiplet_schema = new Schema({
     interfaces: [interface_schema], // then would have a controller as an interface, // DDR..DDR5, LPDDR...LPDDR5/5x
     bump_regions: [bump_region_schema], // general functionality
     subcomponents: [mongoose.Mixed],
-//    base_clock_frequency: String
 });
 
 cache_schema.pre('validate', function() {
@@ -180,15 +145,8 @@ bump_region_schema.pre('validate', async function() {
 
     if (this.rotation == undefined) {
         this.set('rotation', 0);
-    } else { // not undefined
-        if (this.rotation != 0 && this.rotation != 90 && this.rotation != 180 && this.rotation != 270) {
-            // error
-            return new Promise((resolve, reject) => {
-                reject(new Error(`Bump region rotation not specified in supported format: 0, 90, 180, 270.`));
-            });
-        }
-    }
-
+    } 
+    
     if (this.flipped == undefined) {
         this.set('flipped', false);
     }
@@ -224,15 +182,14 @@ chiplet_schema.pre('validate', async function() {
         }
     }
     if (this.process_node != undefined) { // process node units will be nm
-        const process = Number.parseFloat(this.process_node);
-        if (process <= 0) {
+        if (this.process <= 0) {
             return new Promise((resolve, reject) => {
                 reject(new Error("Cannot have zero, negative process node"));
             });
         }
     }
 
-    // check that the bump maps don't go outside the chiplet boundary
+    // // check that the bump maps don't go outside the chiplet boundary
     const bump_regions = this.bump_regions; // an array
 
     for (let i = 0; i < bump_regions.length; i++) { // iterate over all the bump regions to produce a unified bump map
@@ -282,14 +239,11 @@ chiplet_schema.pre('validate', async function() {
 
         }
     }
-
-    // recursively add all clock and voltage domains in
-    // need to go through the bump maps
-
-    
+  
 });
 
 voltage_domain_schema.pre('validate', function() {
+
     // make sure if a value is specified, it's also specified if its a singular value or a range
     if ((this.operational_v!=undefined || this.min_operational_v!=undefined || this.max_operational_v!=undefined) && this.is_range == undefined) {
         return new Promise((resolve, reject) => {
@@ -427,26 +381,6 @@ interface_schema.pre('validate', async function() {
     }
 
 });
-
-// latency: Number, specified for each interface, depends on rx, tx, and connection between them
-// interface schema: physical, protocol, bandwidth, latency = null,-1,0, undefined
-// here in the protocol section you'd link to the protocol document
-
-// info to know about protocols: max bandwidth, reach,
-
-/* Note "bumps" is a feature of the interfaces, not the chiplet
-or rather, the different interfaces dictate what the bump layout of the chiplet look like
-so it's really just important to store the collection of them
-
-    // store the footprint of the chiplet and the bump layout
-    bumps: {
-        pitch: enum: ["mm", "um", "nm"],
-        material: {
-            type: String,
-            enum: ["SnCu", "SnIn", "SnZn", "SnPb", "SnAg", "SnAu", "Au", "SnIn"] // currently these represent the caps
-        }
-    },
-*/
 
 const Chiplet = model('Chiplet', chiplet_schema);
 export default Chiplet;

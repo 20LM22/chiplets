@@ -3,7 +3,7 @@ import Chiplet from './model/Chiplet.js';
 import ChipletSystem from './model/ChipletSystem.js';
 import mongoose from 'mongoose';
 
-export function generate_chiplet_system(chiplet_id_arr, connection_input_arr) {
+export function generate_chiplet_system(system_id, chiplet_id_arr, connection_input_arr) {
 
     const chiplet_arr = [];
     for (let i = 0; i < chiplet_id_arr.length; i++) {
@@ -15,7 +15,7 @@ export function generate_chiplet_system(chiplet_id_arr, connection_input_arr) {
     }
 
     const connection_arr = [];
-    // console.log(connection_input_arr.length);
+    console.log(connection_input_arr);
     for (let i = 0; i < connection_input_arr.length; i++) {
         const connection_tuple = [];
 
@@ -31,16 +31,13 @@ export function generate_chiplet_system(chiplet_id_arr, connection_input_arr) {
         }; 
 
         connection_arr.push(c);
-        // console.log(connection_arr);
     }
 
     const chiplet_system_schema = new ChipletSystem({
         chiplets: chiplet_arr,
         chiplet_connections: connection_arr,
-        _id: faker.string.uuid()
+        _id: system_id // faker.string.uuid()
     });
     
-    // console.log(chiplet_system_schema);
-
     return chiplet_system_schema;
 };

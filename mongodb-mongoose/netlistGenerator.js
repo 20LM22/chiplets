@@ -11,6 +11,7 @@ export async function export_netlist(chiplet_system_chiplet_id) {
 
     // query with the chiplet_ids
     const chiplet_system = await ChipletSystem.findById(chiplet_system_chiplet_id).exec();
+    console.log(chiplet_system);
     const chiplets = chiplet_system.chiplets;
     const chiplet_connections = chiplet_system.chiplet_connections;
     // console.log(chiplet_connections);
@@ -28,6 +29,7 @@ export async function export_netlist(chiplet_system_chiplet_id) {
         // console.log(chiplet_a_interface_id);
 
         const chiplet_a_id = chiplet_a_interface_id.split(".")[0]; // chiplet0
+        console.log("connection is: " + chiplet_connections[i]);
         const chiplet_a_interface_uuid = chiplet_a_interface_id.split(".")[1]; // osdoiuouoi
 
         const chiplet_b_id = chiplet_b_interface_id.split(".")[0]; // chiplet1
@@ -38,8 +40,11 @@ export async function export_netlist(chiplet_system_chiplet_id) {
 
         const chiplet_a = await Chiplet.findById(chiplet_a_doc).exec();
         const chiplet_b = await Chiplet.findById(chiplet_b_doc).exec();
+        console.log("chiplet a: " + chiplet_a);
 
         const interface_a_doc = chiplet_a.interfaces.id(chiplet_a_interface_uuid);
+        console.log("chiplet_a_interface_uuid: " + chiplet_a_interface_uuid);
+        console.log("interface a doc: " + interface_a_doc);
         const bump_region_a_id = interface_a_doc.bump_region;
         const interface_b_doc = chiplet_b.interfaces.id(chiplet_b_interface_uuid);
         const bump_region_b_id = interface_b_doc.bump_region;
@@ -49,23 +54,6 @@ export async function export_netlist(chiplet_system_chiplet_id) {
 
         const subbump_map_a = await Subbump_Map.findById(bump_region_a_doc.subbump_map_id);
         const subbump_map_b = await Subbump_Map.findById(bump_region_b_doc.subbump_map_id);
-
-        // BoW_32, full, rx/tx must match
-        // if (bump_region_a_doc.subbump_map_id.endsWith("-tx") && !bump_region_b_doc.subbump_map_id.endsWith("-rx")) {
-        //     // throw error
-        //     console.log("not tx, rx");
-        // } else if (bump_region_a_doc.subbump_map_id.endsWith("-rx") && !bump_region_b_doc.subbump_map_id.endsWith("-tx")) {
-        //     // throw error
-        //     console.log("not tx, rx");
-        // }
-
-        // if (bump_region_a_doc.subbump_map_id.includes("full") && !bump_region_b_doc.subbump_map_id.includes("full")) {
-        //     // throw error
-        //     console.log("not full, full");
-        // } else if (bump_region_a_doc.subbump_map_id.includes("half") && !bump_region_b_doc.subbump_map_id.includes("half")) {
-        //     // throw error
-        //     console.log("not half, half");
-        // }
     
         // at this point, you've confirmed that the bump maps are compatible, just need to link them
         // iterate over all the bumps in the a bumpmap and find the corresponding one in the b bumpmap to link to
@@ -74,25 +62,40 @@ export async function export_netlist(chiplet_system_chiplet_id) {
             // get this bump's name
             const name_a = bump_a.name;
             if (bump_a.bump_type === "gnd") { // || bump_a.bump_type === "pwr") {
-                const gnd_bump = chiplet_a_id + ".bumpregion." + bump_region_a_id + ".bump" + bump_a.count;
+                const gnd_bump = chiplet_a_id + ".bumpregion." + bump_region_a_id + ".bump" + bump_a._id;
                 ground_bumps.push(gnd_bump);
                 continue;
             }
             if (bump_a.bump_type === "pwr") {
-                const pwr_bump = [chiplet_a_id + ".bumpregion." + bump_region_a_id + ".bump" + bump_a.count,
+                const pwr_bump = [chiplet_a_id + ".bumpregion." + bump_region_a_id + ".bump" + bump_a._id,
                     bump_a.voltage_domain
                 ];
                 pwr_bumps.push(pwr_bump);
                 continue;
             }
+
+            const bump_a_unit_tx = bump_a._id.startsWith("tx") ? 1 : 0;
+            const bump_a_unit_num = bump_a._id[2];
+
+            // if (i==0) {
+            //     console.log("bump a is: " + bump_a);
+            //     console.log("bump a name: " + bump_a.name);
+            //     console.log("bump_a_unit_tx: " + bump_a_unit_tx);
+            //     console.log("bump_a_unit_num: " + bump_a_unit_num);
+            // }
+
             // now search the b map for one with the same name
             for (let j = 0; j < subbump_map_b.bumps.length; j++) {
-                if (subbump_map_b.bumps[j].name === name_a) {
+                const bump_b = subbump_map_b.bumps[j];
+                // if (i==0) console.log("bump b is: " + bump_b);
+                const bump_b_unit_tx = bump_b._id.startsWith("tx") ? 1 : 0;
+                const bump_b_unit_num = bump_b._id[2];
+                if (bump_b_unit_tx != bump_a_unit_tx && bump_a_unit_num == bump_b_unit_num && bump_b.name === name_a) {
                     // now you have both bump a id and bump b id, need to put them into a net object together
                     const n = {
                         id: counter, // autoincrement
-                        net_pads: [chiplet_a_id + ".bumpregion." + bump_region_a_id + ".bump" + bump_a.count,
-                            chiplet_b_id + ".bumpregion." + bump_region_b_id + ".bump" + subbump_map_b.bumps[j].count]
+                        net_pads: [chiplet_a_id + ".bumpregion." + bump_region_a_id + ".bump" + bump_a._id,
+                            chiplet_b_id + ".bumpregion." + bump_region_b_id + ".bump" + bump_b._id]
                     };
                     counter++;
                     netlist_arr.push(n);
@@ -104,11 +107,11 @@ export async function export_netlist(chiplet_system_chiplet_id) {
         for (let i = 0; i < subbump_map_b.bumps.length; i++) {
             const bump_b = subbump_map_b.bumps[i];
             if (bump_b.bump_type === "gnd") {
-                const gnd_bump = chiplet_b_id + ".bumpregion." + bump_region_b_id + ".bump" + bump_b.count;
+                const gnd_bump = chiplet_b_id + ".bumpregion." + bump_region_b_id + ".bump" + bump_b._id;
                 ground_bumps.push(gnd_bump);
             }
             if (bump_b.bump_type === "pwr") {
-                const pwr_bump = [chiplet_b_id + ".bumpregion." + bump_region_b_id + ".bump" + bump_b.count,
+                const pwr_bump = [chiplet_b_id + ".bumpregion." + bump_region_b_id + ".bump" + bump_b._id,
                     bump_b.voltage_domain
                 ];
                 pwr_bumps.push(pwr_bump);

@@ -71,30 +71,30 @@ chiplet_system_schema.pre('validate', async function() {
             const chiplet0_interface = chiplet0.interfaces.find((e) => e._id == chiplet0_interfaceid);
             const chiplet1_interface = chiplet1.interfaces.find((e) => e._id == chiplet1_interfaceid);
 
-            if (chiplet0_interface.physical_layer.length==0) {
-                // error
-                return new Promise((resolve, reject) => {
-                    reject(new Error(`For connection ${connections[i]}, interface 0 PHY layer is empty.`));
-                });
-            }
-            if (chiplet1_interface.physical_layer.length==0) {
-                // error
-                return new Promise((resolve, reject) => {
-                    reject(new Error(`For connection ${connections[i]}, interface 1 PHY layer is empty.`));
-                });
-            }
-            if (chiplet0_interface.protocol_layer.length==0) {
-                // error
-                return new Promise((resolve, reject) => {
-                    reject(new Error(`For connection ${connections[i]}, interface 0 protocol layer is empty.`));
-                });
-            }
-            if (chiplet1_interface.protocol_layer.length==0) {
-                // error
-                return new Promise((resolve, reject) => {
-                    reject(new Error(`For connection ${connections[i]}, interface 1 protocol layer is empty.`));
-                });
-            }
+            // if (chiplet0_interface.physical_layer.length==0) {
+            //     // error
+            //     return new Promise((resolve, reject) => {
+            //         reject(new Error(`For connection ${connections[i]}, interface 0 PHY layer is empty.`));
+            //     });
+            // }
+            // if (chiplet1_interface.physical_layer.length==0) {
+            //     // error
+            //     return new Promise((resolve, reject) => {
+            //         reject(new Error(`For connection ${connections[i]}, interface 1 PHY layer is empty.`));
+            //     });
+            // }
+            // if (chiplet0_interface.protocol_layer.length==0) {
+            //     // error
+            //     return new Promise((resolve, reject) => {
+            //         reject(new Error(`For connection ${connections[i]}, interface 0 protocol layer is empty.`));
+            //     });
+            // }
+            // if (chiplet1_interface.protocol_layer.length==0) {
+            //     // error
+            //     return new Promise((resolve, reject) => {
+            //         reject(new Error(`For connection ${connections[i]}, interface 1 protocol layer is empty.`));
+            //     });
+            // }
 
             const phy0 = chiplet0_interface.physical_layer[0].split('-')[0]; // get first element in case phy doc doesn't exist
             const phy1 = chiplet1_interface.physical_layer[0].split('-')[0];

@@ -3,12 +3,12 @@ const { Schema, model } = mongoose;
 
 const PHYSchema = new Schema({
     name: String,
-    max_bandwidth: Number, // bandwidth is for all lanes
+    gbps_per_wire: Number, // bandwidth is for all lanes
+    gtps: Number,
     reach: Number,
     clock_type: String, // should clock type, forwarded vs. recovered be in here?
     substructure: mongoose.Mixed,
     _id: String // user sets this explicitly
-    // need a physical layer compatibility too? --> no as long as the PHYs are the same they're compat and that's it
 }, { collection: 'phys' });
 
 PHYSchema.pre('validate', function() {

@@ -6,7 +6,6 @@ const subbumpMapSchema = new Schema({
     bumps: [
         {
         _id: String,
-        count: Int32,
         x_pos: Number,
         y_pos: Number,
         radius: Number,
@@ -33,17 +32,8 @@ const subbumpMapSchema = new Schema({
 subbumpMapSchema.pre('validate', function() {
 
     for (let i = 0; i < this.bumps.length; i++) {
-        if (this.bumps[i].count != undefined) {
-            if (this.bumps[i].count < 0) {
-                return new Promise((resolve, reject) => {
-                    reject(new Error('Must have position bump counts.'));
-                });
-            }
-        }
-
         // validate the rest of the bumps
         if (this.bumps[i].radius == undefined) {
-            
             if (this.bumps[i] < 0) {
                 return new Promise((resolve, reject) => {
                     reject(new Error('Must have position bump counts.'));

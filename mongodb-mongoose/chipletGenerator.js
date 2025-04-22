@@ -2,6 +2,313 @@ import { faker } from '@faker-js/faker';
 import Chiplet from './model/Chiplet.js';
 import mongoose from 'mongoose';
 
+export function generate_epyc_iod_chiplet() {
+    const width = 4; // mm
+    const height = 11; // mm
+    const bump_pitch = 55;
+    const subbump_width = 39;
+    const subbump_height = 3;
+
+    // generate synthetic bump maps
+    const num_interfaces = 8;
+    const bump_regions = [];
+
+    for (let i = 0; i < 8; i++) { // 8 connections to CCD dies
+        let x_offset =  (i == 0 || i == 1 || i == 2 || i == 3) ? bump_pitch/1000 : width - bump_pitch/1000;
+        let y_offset =  i == 0 ? bump_pitch/1000 + (bump_pitch*subbump_width)/1000: // (bump_pitch*subbump_width)/1000 :
+                        i == 1 ? bump_pitch/1000 + 2*(bump_pitch*subbump_width)/1000 + 0.20 : 
+                        i == 2 ? height - 0.20 - (bump_pitch*subbump_width)/1000 - bump_pitch/1000 : 
+                        i == 3 ? height - bump_pitch/1000 :
+                        i == 4 ? bump_pitch/1000 :
+                        i == 5 ? bump_pitch/1000 + 0.20 + (bump_pitch*subbump_width)/1000 :
+                        i == 6 ? height - 0.20 - 2*(bump_pitch*subbump_width)/1000 - bump_pitch/1000 :
+                        height - bump_pitch/1000 - (bump_pitch*subbump_width)/1000;
+        let rotation = (i == 0 || i == 1 || i == 2 || i == 3) ? 270 : 90;
+        let flipped = false;   
+        let b = {
+            subbump_map_id: "BoW_32-55bp-15dia-rect-full-bi-example", // (i == 0 || i == 1 || i == 6 || i == 7) ? "BoW_32-150bp-20dia-hex-full-bi-example" : "BoW_32-150bp-10dia-hex-full-bi-example",
+            offset: [x_offset, y_offset],
+            rotation: rotation,
+            flipped: flipped,
+            _id: faker.string.uuid()
+        };
+        bump_regions.push(b);              
+    }
+
+    // bumps for IO devices
+    const bump_pitch_io = 50;
+    for (let i = 0; i < 8; i++) { // 8 connections to CCD dies
+        let x_offset =  i == 0 ? ((width*1000 - (bump_pitch_io*subbump_width))/2)/1000 :
+                        i == 1 ? ((width*1000 - (bump_pitch_io*subbump_width))/2)/1000 :
+                        i == 2 ? bump_pitch_io/1000 + 0.5 : 
+                        i == 3 ? (bump_pitch_io + bump_pitch_io*subbump_height)/1000 + 0.5 :
+                        i == 4 ? width - ((bump_pitch_io + bump_pitch_io*subbump_height)/1000) - 0.5 :
+                        i == 5 ? width - (bump_pitch_io/1000) - 0.5 :
+                        i == 6 ? width - (((width*1000 - (bump_pitch_io*subbump_width))/2)/1000) :
+                        width - (((width*1000 - (bump_pitch_io*subbump_width))/2)/1000);        
+        let y_offset =  i == 0 ? bump_pitch_io/1000 :
+                        i == 1 ? (bump_pitch_io + bump_pitch_io*subbump_height)/1000 :
+                        i == 2 ? (((height*1000 - (bump_pitch_io*subbump_width))/2)/1000) + bump_pitch_io*subbump_width/1000 - 0.2 :
+                        i == 3 ? (((height*1000 - (bump_pitch_io*subbump_width))/2)/1000) + bump_pitch_io*subbump_width/1000 - 0.2 :
+                        i == 4 ? (((height*1000 - (bump_pitch_io*subbump_width))/2)/1000) + 0.2 :
+                        i == 5 ? (((height*1000 - (bump_pitch_io*subbump_width))/2)/1000) + 0.2 :
+                        i == 6 ? height - (bump_pitch_io + bump_pitch_io*subbump_height)/1000 :
+                        height - bump_pitch_io/1000;
+        let rotation = (i == 0 || i == 1) ? 0 :
+                        (i == 2 || i == 3) ? 270 :
+                        (i == 4 || i == 5) ? 90 :
+                        180;
+        let flipped = false;   
+        let b = {
+            subbump_map_id: (i == 0 || i == 1 || i == 6 || i == 7) ? "BoW_32-50bp-10dia-rect-hex-bi-example" : "BoW_32-40bp-20dia-hex-rect-bi-example",
+            offset: [x_offset, y_offset],
+            rotation: rotation,
+            flipped: flipped,
+            _id: faker.string.uuid()
+        };
+        bump_regions.push(b);              
+    }
+
+    // interfaces
+    const interfaces = [];
+    let interface_ids = ["ul1", "ul2", "bl1", "bl2", "ur1", "ur2", "br1", "br2"];
+    for (let i = 0; i < num_interfaces; i++) {
+        const f = {
+            physical_layer: ["BoW-32", ""],
+            protocol_layer: [["CXL.cache 1.0", ""]],
+            bump_region: (bump_regions[i])["_id"], // generate them in order, then match them up
+            _id: interface_ids[i]
+        };
+        interfaces.push(f);
+    }
+    // IO 
+    interface_ids = ["pcie64_1", "pcie64_2", "pcie128_3", "pcie128_4", "pcie128_5", "pcie128_6", "pcie64_7", "pcie64_8"];
+    for (let i = 0; i < num_interfaces; i++) {
+        let f = {};
+        if (i == 0 || i == 1 || i == 6 || i == 7) {
+            f = {
+                physical_layer:  ["BoW-32", ""],
+                protocol_layer: [["PCIe 4 x64", ""]],
+                bump_region: (bump_regions[i])["_id"], // generate them in order, then match them up
+                _id: interface_ids[i]
+            };
+        } else {
+            f = {
+                physical_layer:  ["BoW-32", ""],
+                protocol_layer: [["PCIe 4 x128", ""]],
+                bump_region: (bump_regions[i])["_id"], // generate them in order, then match them up
+                _id: interface_ids[i]
+            };
+        }
+        interfaces.push(f);
+    }
+
+    const synthetic_iod_chiplet = new Chiplet({
+        _id: "EPYC_IOD",
+        name: "EPYC IOD",
+        manufacturer: "AMD",
+        width: 4,
+        height: 11,
+        area: 44,
+        interfaces: interfaces,
+        bump_regions: bump_regions,
+        process_node: 11,  
+        functionality: ["IO"],
+        clock_domains: [ {
+            operational_freq: 1.46,
+            is_range: false
+            },
+            {
+            operational_freq: 1.0,
+            is_range: false
+        }], 
+        voltage_domains: [ {
+            min_operational_v: 0.75,
+            max_operational_v: 1.4,
+            is_range: true
+        }],   
+    });
+
+    return synthetic_iod_chiplet;
+};
+
+export function generate_epyc_ccd_chiplet() {
+    const width = 3;
+    const height = 4.5; // mm
+    const bump_pitch = 50;
+    const subbump_width = 39;
+
+    // generate synthetic bump maps
+    const num_interfaces = 2;
+    const bump_regions = [];
+
+    for (let i = 0; i < num_interfaces; i++) {
+        let x_offset = bump_pitch/1000;
+        let y_offset = i == 0 ? (((((height*1000)/2) - (bump_pitch*subbump_width))/2) + (bump_pitch*subbump_width))/1000 :
+                       ((height*1000) - ((((height*1000)/2) - (bump_pitch*subbump_width))/2))/1000;
+        let rotation = 270;
+        let flipped = false;   
+        let b = {
+            subbump_map_id: "BoW_32-50bp-10dia-hex-full-bi-example", // "BoW_32-140bp-20dia-hex-full-bi-example",
+            offset: [x_offset, y_offset],
+            rotation: rotation,
+            flipped: flipped,
+            _id: faker.string.uuid()
+        };
+        bump_regions.push(b);              
+    }
+
+    // interfaces
+    const interfaces = [];
+    const interface_ids = ["top", "bottom"];
+    for (let i = 0; i < num_interfaces; i++) {
+        const f = {
+            physical_layer: ["BoW-32", ""],
+            protocol_layer: [["CXL.cache 1.0", ""]],
+            bump_region: (bump_regions[i])["_id"], 
+            _id: interface_ids[i]
+        };
+        interfaces.push(f);
+    }
+
+    const synthetic_ccd_chiplet = new Chiplet({
+        _id: "EPYC_CCD",
+        name: "EPYC CCD",
+        manufacturer: "AMD",
+        width: 3,
+        height: 4.5,
+        area: 13.5,
+        interfaces: interfaces,
+        bump_regions: bump_regions,
+        process_node: 7,  
+        functionality: ["compute"],
+        CPUs: [{
+            quantity: 1,
+            num_cores: 8,
+            L3_cache: {
+                quantity: 1,
+                capacity: 256,
+                associativity: 4,
+                replacement_policy: "LRU"
+            }
+        }],
+        clock_domains: [ {
+            operational_freq: 1.46,
+            is_range: false
+            }
+        ], 
+        voltage_domains: [ {
+            min_operational_v: 0.6,
+            max_operational_v: 1.3,
+            is_range: true
+        }],   
+    });
+
+    return synthetic_ccd_chiplet;
+};
+
+export function generate_example_chiplet(id, name, subbump_map_id, bump_pitch, subbump_width) {
+    const chiplet_name = name;
+    const chiplet_id = id; // mongoose.ObjectId.toString(); // taking out some of the negatives
+    const width = 2.6; 
+    const height = 2.6;
+
+    // generate synthetic bump maps
+    const num_interfaces = 4;
+    const bump_regions = [];
+
+    for (let i = 0; i < num_interfaces; i++) {
+        let x_offset = i == 0 ? ((width*1000 - bump_pitch*subbump_width)/2)/1000 : // + bump_pitch*subbump_width)/1000 :
+                       i == 1 ? width - bump_pitch/1000 :
+                       i == 2 ? width - ((width*1000 - bump_pitch*subbump_width)/2)/1000 : 
+                       bump_pitch/1000;
+        let y_offset = i == 0 ? bump_pitch/1000 : // (bump_pitch*subbump_height)/1000 :
+                       i == 1 ? (((height*1000 - bump_pitch*subbump_width)/2))/1000 :
+                       i == 2 ? height - bump_pitch/1000 :
+                       (((height*1000 - bump_pitch*subbump_width)/2) + bump_pitch*subbump_width)/1000; 
+        let rotation = i == 0 ? 0 :
+                       i == 1 ? 90 :
+                       i == 2 ? 180 :
+                       270;
+        let flipped = false;   
+        let b = {
+            subbump_map_id: subbump_map_id, // must match what is in the subbump collection
+            offset: [x_offset, y_offset],
+            rotation: rotation,
+            flipped: flipped,
+            _id: faker.string.uuid() // id of this bump map --> can be random, prepended with the chiplet name
+        };
+        bump_regions.push(b);              
+    }
+
+    // interfaces
+    const interfaces = [];
+    const interface_ids = ["north", "east", "south", "west"];
+    for (let i = 0; i < num_interfaces; i++) {
+        const f = {
+            physical_layer: ["CXL.cache 1.0", ""],
+            protocol_layer: [["BoW-32", ""]],
+            bump_region: (bump_regions[i])["_id"], // generate them in order, then match them up
+            _id: interface_ids[i]
+        };
+        interfaces.push(f);
+    }
+
+    const synthetic_chiplet = new Chiplet({
+        _id: chiplet_id,
+        name: chiplet_name,
+        width: width,
+        height: height,
+        interfaces: interfaces,
+        bump_regions: bump_regions,
+        process_node: 16,  
+        functionality: ["accelerator"],
+        SRAMs: [{
+            quantity: 1,
+            capacity: 64
+        }],
+        CPUs: [{
+            quantity: 1,
+            name: "RISC-V"
+        }],
+        clock_domains: [{
+            min_operational_freq: 0.16,
+            max_operational_freq: 2.0,
+            is_range: true
+        }], 
+        voltage_domains: [{
+            min_operational_v: 0.42,
+            max_operational_v: 1.2,
+            is_range: true
+        }],   
+        subcomponents: [{
+            quantity: 16,
+            name: "PE",
+            num_vector_units: 8,
+            vector_width: 8,
+            weight_buffer: {
+                quantity: 1,
+                capacity: 32,
+            },
+            input_buffer: {
+                quantity: 1,
+                capacity: 8,
+            },
+            accumulation_buffer: {
+                quantity: 1,
+                capacity: 3,
+            }
+        },
+        {
+            quantity: 1,
+            name: "Global PE",
+            capacity: 64
+        }]
+    });
+    
+    return synthetic_chiplet;
+};
+
 export function generate_test_net_chiplet() {
     const chiplet_id = faker.string.uuid(); // mongoose.ObjectId.toString(); // taking out some of the negatives
     const width = 5 // faker.number.float({ min: 10, max: 20, fractionDigits: 2 }); // mm
@@ -234,14 +541,9 @@ export function generate_cpu_chiplet() {
         const bump_pitch = 50; // in the github doc, they gave an example of 40um for an interposer
         const diameter = 20; // these numbers can be made random, but for now let's fix them
         const bump_region_generation_result = generate_Bump_Region(interface_id, width, height, bump_pitch, diameter);
-        const bump_region = bump_region_generation_result[0];
-        // also take the subbump documents that were generated and put them into the array
-        // that keeps track of all the subbump docs that have been generated for this chiplet
-        const subbump_regions_documents = bump_region_generation_result[1];
-        subbump_regions_documents_all_interfaces.push(...subbump_regions_documents);
     */
 
-    const synthetic_chiplet = new Chiplet({ // this is 1 chiplet, power efficiency
+    const synthetic_chiplet = new Chiplet({
         _id: chiplet_id,
         area: area,
         width: width,
